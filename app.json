@@ -1,17 +1,28 @@
 {
   "expo": {
-    "name": "permana-mobile",
+    "name": "Permana Sales",
     "slug": "permana-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "permana",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "id.permana.sales",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        },
+        "NSCameraUsageDescription": "Foto selfie absensi dan foto canvassing.",
+        "NSLocationWhenInUseUsageDescription": "Menandai lokasi check-in dan kunjungan lapangan."
+      }
     },
     "android": {
+      "package": "id.permana.sales",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#034A6B",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -20,6 +31,21 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Menandai lokasi check-in dan kunjungan lapangan."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Foto selfie absensi dan foto canvassing."
+        }
+      ]
+    ]
   }
 }
