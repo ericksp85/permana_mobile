@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import CanvassStack from './CanvassStack';
+import HomeStack from './HomeStack';
 import PipelineStack from './PipelineStack';
 import AttendanceScreen from '../screens/AttendanceScreen';
-import HomeScreen from '../screens/HomeScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';
 import { colors } from '../theme';
 
@@ -31,7 +31,7 @@ export default function TabNavigator() {
                 ),
             })}
         >
-            <Tab.Screen name="Beranda" component={HomeScreen} />
+            <Tab.Screen name="Beranda" component={HomeStack} />
             <Tab.Screen name="Pipeline" component={PipelineStack} />
             <Tab.Screen name="Jadwal" component={ScheduleScreen} />
             <Tab.Screen name="Absensi" component={AttendanceScreen} />

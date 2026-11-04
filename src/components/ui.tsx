@@ -6,12 +6,13 @@ import {
     Text,
     TextInput,
     View,
+    type StyleProp,
     type TextInputProps,
     type ViewStyle,
 } from 'react-native';
 import { colors, radius, spacing, stageColors } from '../theme';
 
-export function Card({ children, style }: { children: ReactNode; style?: ViewStyle }) {
+export function Card({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
     return <View style={[styles.card, style]}>{children}</View>;
 }
 
@@ -93,6 +94,15 @@ export function rupiahShort(value: number | null | undefined): string {
     if (value >= 1_000_000) return `Rp ${(value / 1_000_000).toFixed(1)}jt`;
     if (value >= 1_000) return `Rp ${(value / 1_000).toFixed(0)}rb`;
     return `Rp ${value}`;
+}
+
+/** Format integer Rupiah in full with thousands separators: "Rp 1.500.000". */
+export function rupiah(value: number | null | undefined): string {
+    const n = value ?? 0;
+    const grouped = Math.round(n)
+        .toString()
+        .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `Rp ${grouped}`;
 }
 
 const styles = StyleSheet.create({

@@ -195,3 +195,144 @@ export const CANVASS_RESULTS: { value: CanvassResult; label: string; bg: string;
     { value: 'not_now', label: 'Belum sekarang', bg: '#eef2f5', fg: '#5e7180' },
     { value: 'closed', label: 'Tutup / kosong', bg: '#fbe6e6', fg: '#a83434' },
 ];
+
+// --- Notifications ----------------------------------------------------------
+
+export type NotificationItem = {
+    id: string;
+    type: string | null;
+    tag: string | null;
+    title: string | null;
+    body: string | null;
+    lead_id: number | null;
+    read: boolean;
+    created_at: string | null;
+};
+
+/** GET /notifications — a paginator with the unread count added on top. */
+export type NotificationsResponse = Paginated<NotificationItem> & { unread: number };
+
+// --- Targets ----------------------------------------------------------------
+
+/** An Account Manager's own monthly + annual target summary. */
+export type TargetSummary = {
+    mrc_target: number;
+    won: number;
+    pct: number;
+    annual_target: number;
+    annual_won: number;
+};
+
+export type TargetTeam = {
+    id: number;
+    name: string;
+    leader: string | null;
+    members: number;
+    mrc_target: number;
+    sum_am_targets: number;
+    under_sum: boolean;
+    won: number;
+    pct: number;
+    annual_target: number;
+};
+
+export type TargetPerson = {
+    id: number;
+    name: string;
+    team_id: number | null;
+    team: string | null;
+    mrc_target: number;
+    annual_target: number;
+    won: number;
+    pct: number;
+};
+
+export type TargetsResponse = {
+    period: string;
+    me: TargetSummary | null;
+    teams: TargetTeam[];
+    people: TargetPerson[];
+};
+
+// --- Reports ----------------------------------------------------------------
+
+export type ReportKpis = {
+    won_mrc: number;
+    new_customers: number;
+    pipeline_added: number;
+    activities: number;
+};
+
+export type ReportSeriesPoint = { label: string; mrc: number; current: boolean };
+export type FunnelStep = { key: string; label: string; value: number };
+
+export type ReportsResponse = {
+    period: 'weekly' | 'monthly';
+    kpis: ReportKpis;
+    series: ReportSeriesPoint[];
+    funnel: FunnelStep[];
+};
+
+export type LeaderboardRow = {
+    user_id: number;
+    name: string;
+    team: string | null;
+    won_mrc: number;
+    deals: number;
+};
+
+export type LeaderboardResponse = {
+    scope: 'team' | 'all';
+    month: string;
+    rows: LeaderboardRow[];
+};
+
+// --- Quotations -------------------------------------------------------------
+
+export type QuotationStatus =
+    | 'verifying'
+    | 'waiting_gm'
+    | 'approved'
+    | 'returned'
+    | 'rejected'
+    | 'sent';
+
+export type Quotation = {
+    id: number;
+    number: string | null;
+    lead_id: number;
+    company?: string;
+    bandwidth: string | null;
+    mrc: number;
+    otc: number;
+    term_months: number;
+    discount_pct: number;
+    net_mrc: number;
+    contract_value: number;
+    status: QuotationStatus;
+    status_label: string;
+    completed_step: number;
+    admin_note: string | null;
+    gm_note: string | null;
+    requested_by: number;
+    requester?: string;
+    has_pdf: boolean;
+    verified_at: string | null;
+    approved_at: string | null;
+    sent_at: string | null;
+    created_at: string | null;
+};
+
+/** Status pill colours for a quotation. */
+export const QUOTATION_STATUS_STYLE: Record<QuotationStatus, { bg: string; fg: string }> = {
+    verifying: { bg: '#fff2d6', fg: '#8a5e00' },
+    waiting_gm: { bg: '#e8eff4', fg: '#2c5d78' },
+    approved: { bg: '#dff3e8', fg: '#137347' },
+    returned: { bg: '#fdeecd', fg: '#8a5e00' },
+    rejected: { bg: '#fbe6e6', fg: '#a83434' },
+    sent: { bg: '#d6f4f6', fg: '#00737a' },
+};
+
+/** Quotation term + discount options allowed by the API. */
+export const QUOTATION_TERMS = [12, 24, 36] as const;
+export const QUOTATION_DISCOUNTS = [0, 5, 10, 15] as const;
