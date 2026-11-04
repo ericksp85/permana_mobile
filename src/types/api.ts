@@ -155,3 +155,43 @@ export type AttendanceIndex = {
     geofence: Geofence | null;
     history: Attendance[];
 };
+
+export type CanvassResult = 'interested' | 'competitor' | 'not_now' | 'closed';
+
+/** One door-to-door canvassing visit. */
+export type CanvassVisit = {
+    id: number;
+    canvass_area_id: number;
+    user_id: number;
+    name: string;
+    result: CanvassResult;
+    result_label: string;
+    note: string | null;
+    has_photo: boolean;
+    lat: number | null;
+    lng: number | null;
+    lead_id: number | null;
+    created_at: string;
+};
+
+/** A canvassing area (a mapped patch with a unit target). */
+export type CanvassArea = {
+    id: number;
+    name: string;
+    polygon: number[][];
+    target_units: number;
+    team_id: number | null;
+    assigned_user_id: number | null;
+    visits_count?: number;
+};
+
+/** An area with its visit list loaded. */
+export type CanvassAreaDetail = CanvassArea & { visits: CanvassVisit[] };
+
+/** Canvassing outcomes a user may pick, with local labels and pin colours. */
+export const CANVASS_RESULTS: { value: CanvassResult; label: string; bg: string; fg: string }[] = [
+    { value: 'interested', label: 'Tertarik', bg: '#d6f4f6', fg: '#00737a' },
+    { value: 'competitor', label: 'Pakai kompetitor', bg: '#fdeecd', fg: '#8a5e00' },
+    { value: 'not_now', label: 'Belum sekarang', bg: '#eef2f5', fg: '#5e7180' },
+    { value: 'closed', label: 'Tutup / kosong', bg: '#fbe6e6', fg: '#a83434' },
+];

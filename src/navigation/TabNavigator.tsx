@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import CanvassStack from './CanvassStack';
 import PipelineStack from './PipelineStack';
 import AttendanceScreen from '../screens/AttendanceScreen';
 import HomeScreen from '../screens/HomeScreen';
@@ -13,6 +14,7 @@ const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
     Pipeline: 'git-branch',
     Jadwal: 'calendar',
     Absensi: 'finger-print',
+    Canvass: 'map',
 };
 
 export default function TabNavigator() {
@@ -33,6 +35,7 @@ export default function TabNavigator() {
             <Tab.Screen name="Pipeline" component={PipelineStack} />
             <Tab.Screen name="Jadwal" component={ScheduleScreen} />
             <Tab.Screen name="Absensi" component={AttendanceScreen} />
+            <Tab.Screen name="Canvass" component={CanvassStack} />
         </Tab.Navigator>
     );
 }

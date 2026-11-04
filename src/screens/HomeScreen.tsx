@@ -10,7 +10,7 @@ const ROADMAP: { label: string; done: boolean }[] = [
     { label: 'Detail lead & aktivitas', done: true },
     { label: 'Jadwal', done: true },
     { label: 'Absensi (selfie + GPS)', done: true },
-    { label: 'Canvassing + foto', done: false },
+    { label: 'Canvassing + foto', done: true },
     { label: 'Quotation, target, laporan', done: false },
 ];
 

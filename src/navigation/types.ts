@@ -8,3 +8,12 @@ export type PipelineStackParamList = {
 
 export type PipelineStackScreenProps<T extends keyof PipelineStackParamList> =
     NativeStackScreenProps<PipelineStackParamList, T>;
+
+/** Screens inside the Canvass tab's stack. */
+export type CanvassStackParamList = {
+    CanvassList: undefined;
+    CanvassArea: { areaId: number; name: string };
+};
+
+export type CanvassStackScreenProps<T extends keyof CanvassStackParamList> =
+    NativeStackScreenProps<CanvassStackParamList, T>;
