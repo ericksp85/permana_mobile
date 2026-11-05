@@ -6,6 +6,7 @@ import { apiFetch } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { Card, ProgressRing, StagePill, rupiahShort } from '../components/ui';
 import type { HomeStackScreenProps } from '../navigation/types';
+import SyncBanner from '../offline/SyncBanner';
 import { colors, radius, spacing } from '../theme';
 import type {
     Event,
@@ -162,6 +163,8 @@ export default function HomeScreen({ navigation }: HomeStackScreenProps<'HomeMai
                         </Pressable>
                     ))}
                 </View>
+
+                <SyncBanner />
 
                 {/* Today */}
                 <View style={styles.sectionHead}>

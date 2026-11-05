@@ -15,6 +15,9 @@ import { useAuth } from '../auth/AuthContext';
 import { Button, Card, Pill, StagePill, rupiah } from '../components/ui';
 import { QuotationStepper } from './QuotationsScreen';
 import type { PipelineStackScreenProps } from '../navigation/types';
+import { useOffline } from '../offline/OfflineContext';
+import SyncBanner from '../offline/SyncBanner';
+import { submitOrQueue } from '../offline/sync';
 import { colors, radius, spacing } from '../theme';
 import {
     LOGGABLE_TYPES,
@@ -27,6 +30,9 @@ import {
     type Quotation,
     type Single,
 } from '../types/api';
+
+/** An activity logged while offline, shown optimistically until it syncs. */
+type PendingActivity = { tempId: string; typeLabel: string; note: string | null };
 
 const VERIFICATION: Record<string, { bg: string; fg: string; label: string }> = {
     verified: { bg: '#dff3e8', fg: '#137347', label: 'Verified' },
@@ -50,8 +56,10 @@ export default function LeadDetailScreen({
 }: PipelineStackScreenProps<'LeadDetail'>) {
     const { leadId, company } = route.params;
     const { user } = useAuth();
+    const { online } = useOffline();
     const [lead, setLead] = useState<LeadDetail | null>(null);
     const [quotations, setQuotations] = useState<Quotation[]>([]);
+    const [queuedActivities, setQueuedActivities] = useState<PendingActivity[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | undefined>();
 
@@ -72,6 +80,8 @@ export default function LeadDetailScreen({
             ]);
             setLead(leadRes.data);
             setQuotations(quoteRes.data);
+            // Server timeline is authoritative once we can read it.
+            setQueuedActivities([]);
         } catch {
             setError('Couldn’t load lead details.');
         } finally {
@@ -84,15 +94,33 @@ export default function LeadDetailScreen({
     }, [load]);
 
     const logActivity = async () => {
+        const trimmed = note.trim();
+        const activityType = type;
         setSaving(true);
+        setError(undefined);
         try {
-            await apiFetch(`/leads/${leadId}/activities`, {
-                method: 'POST',
-                body: { type, note: note.trim() || undefined },
+            const res = await submitOrQueue(online, {
+                kind: 'activity',
+                label: `Activity · ${company}`,
+                path: `/leads/${leadId}/activities`,
+                body: { type: activityType, note: trimmed || undefined },
             });
             setNote('');
             setType('CALL');
-            await load();
+            if (res.queued) {
+                const label =
+                    LOGGABLE_TYPES.find((t) => t.value === activityType)?.label ?? activityType;
+                setQueuedActivities((prev) => [
+                    {
+                        tempId: `${Date.now()}`,
+                        typeLabel: label,
+                        note: trimmed || null,
+                    },
+                    ...prev,
+                ]);
+            } else {
+                await load();
+            }
         } catch (e) {
             setError(e instanceof ApiError ? e.message : 'Couldn’t log activity.');
         } finally {
@@ -121,6 +149,7 @@ export default function LeadDetailScreen({
 
     return (
         <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+            <SyncBanner />
             <Card style={{ gap: spacing.sm }}>
                 <View style={styles.rowBetween}>
                     <StagePill stage={lead.stage} label={lead.stage_label} />
@@ -213,7 +242,17 @@ export default function LeadDetailScreen({
             </Card>
 
             <Text style={styles.sectionTitle}>Activity</Text>
-            {lead.activities.length === 0 ? (
+            {queuedActivities.map((q) => (
+                <View key={q.tempId} style={styles.timelineRow}>
+                    <View style={[styles.timelineDot, styles.timelineDotPending]} />
+                    <View style={styles.timelineBody}>
+                        <Text style={styles.activityTitle}>{q.typeLabel}</Text>
+                        {q.note ? <Text style={styles.activityNote}>{q.note}</Text> : null}
+                        <Pill bg="#fff2d6" fg="#8a5e00">Pending sync</Pill>
+                    </View>
+                </View>
+            ))}
+            {lead.activities.length === 0 && queuedActivities.length === 0 ? (
                 <Text style={styles.empty}>No activity yet.</Text>
             ) : (
                 lead.activities.map((a) => (
@@ -521,6 +560,7 @@ const styles = StyleSheet.create({
     empty: { color: colors.mutedink, paddingVertical: spacing.md },
     timelineRow: { flexDirection: 'row', gap: spacing.md },
     timelineDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.teal, marginTop: 5 },
+    timelineDotPending: { backgroundColor: '#e0b43c' },
     timelineBody: { flex: 1, gap: 2, paddingBottom: spacing.md },
     activityTitle: { fontSize: 15, fontWeight: '700', color: colors.ink },
     activityNote: { fontSize: 14, color: colors.ink },

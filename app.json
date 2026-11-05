@@ -14,8 +14,8 @@
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         },
-        "NSCameraUsageDescription": "Foto selfie absensi dan foto canvassing.",
-        "NSLocationWhenInUseUsageDescription": "Menandai lokasi check-in dan kunjungan lapangan."
+        "NSCameraUsageDescription": "Selfie photos for attendance check-in and canvassing photos.",
+        "NSLocationWhenInUseUsageDescription": "Tags your location for check-in and field visits."
       }
     },
     "android": {
@@ -37,7 +37,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Menandai lokasi check-in dan kunjungan lapangan."
+          "locationWhenInUsePermission": "Tags your location for check-in and field visits."
         }
       ],
       [

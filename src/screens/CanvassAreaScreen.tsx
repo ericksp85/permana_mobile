@@ -16,6 +16,9 @@ import {
 import { apiFetch, ApiError } from '../api/client';
 import { Button, Card, Pill } from '../components/ui';
 import type { MoreStackScreenProps } from '../navigation/types';
+import { useOffline } from '../offline/OfflineContext';
+import SyncBanner from '../offline/SyncBanner';
+import { submitOrQueue } from '../offline/sync';
 import { colors, radius, spacing } from '../theme';
 import {
     CANVASS_RESULTS,
@@ -27,6 +30,8 @@ import {
 
 type Coords = { lat: number; lng: number };
 type Photo = { uri: string; dataUrl: string };
+/** A visit logged while offline, shown optimistically until it syncs. */
+type PendingVisit = { tempId: string; name: string; result: CanvassResult; note: string | null };
 
 function resultStyle(result: CanvassResult): { bg: string; fg: string } {
     const r = CANVASS_RESULTS.find((x) => x.value === result);
@@ -47,7 +52,9 @@ export default function CanvassAreaScreen({
     navigation,
 }: MoreStackScreenProps<'CanvassArea'>) {
     const { areaId, name } = route.params;
+    const { online } = useOffline();
     const [area, setArea] = useState<CanvassAreaDetail | null>(null);
+    const [queued, setQueued] = useState<PendingVisit[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | undefined>();
 
@@ -70,6 +77,8 @@ export default function CanvassAreaScreen({
             setError(undefined);
             const res = await apiFetch<Single<CanvassAreaDetail>>(`/canvass/${areaId}`);
             setArea(res.data);
+            // Server is authoritative once we can read it — drop local optimistic rows.
+            setQueued([]);
         } catch {
             setError('Couldn’t load area.');
         } finally {
@@ -141,20 +150,31 @@ export default function CanvassAreaScreen({
         }
         setSaving(true);
         setError(undefined);
+        const payload = {
+            name: visitName.trim(),
+            result,
+            note: note.trim() || undefined,
+            lat: coords?.lat,
+            lng: coords?.lng,
+            photo: photo?.dataUrl,
+        };
         try {
-            await apiFetch<Single<CanvassVisit>>(`/canvass/${areaId}/visits`, {
-                method: 'POST',
-                body: {
-                    name: visitName.trim(),
-                    result,
-                    note: note.trim() || undefined,
-                    lat: coords?.lat,
-                    lng: coords?.lng,
-                    photo: photo?.dataUrl,
-                },
+            const res = await submitOrQueue<Single<CanvassVisit>>(online, {
+                kind: 'visit',
+                label: `Visit · ${payload.name}`,
+                path: `/canvass/${areaId}/visits`,
+                body: payload,
             });
             resetForm();
-            await load();
+            if (res.queued) {
+                setQueued((prev) => [
+                    { tempId: `${Date.now()}`, name: payload.name, result, note: payload.note ?? null },
+                    ...prev,
+                ]);
+                Alert.alert('Saved offline', 'This visit will sync automatically when you’re back online.');
+            } else {
+                await load();
+            }
         } catch (e) {
             setError(e instanceof ApiError ? e.message : 'Couldn’t save visit.');
         } finally {
@@ -196,6 +216,7 @@ export default function CanvassAreaScreen({
 
     return (
         <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+            <SyncBanner />
             <Text style={styles.sectionTitle}>Area progress</Text>
             <Card style={styles.progressCard}>
                 <View>
@@ -283,7 +304,24 @@ export default function CanvassAreaScreen({
 
             {/* Visit list */}
             <Text style={styles.sectionTitle}>Visits</Text>
-            {area.visits.length === 0 ? (
+            {queued.map((q) => {
+                const rs = resultStyle(q.result);
+                return (
+                    <Card key={q.tempId} style={[styles.visitCard, styles.visitCardPending]}>
+                        <View style={styles.visitTop}>
+                            <Text style={styles.visitName} numberOfLines={1}>
+                                {q.name}
+                            </Text>
+                            <Pill bg={rs.bg} fg={rs.fg}>
+                                {CANVASS_RESULTS.find((x) => x.value === q.result)?.label ?? q.result}
+                            </Pill>
+                        </View>
+                        {q.note ? <Text style={styles.visitNote}>{q.note}</Text> : null}
+                        <Pill bg="#fff2d6" fg="#8a5e00">Pending sync</Pill>
+                    </Card>
+                );
+            })}
+            {area.visits.length === 0 && queued.length === 0 ? (
                 <Text style={styles.empty}>No visits in this area yet.</Text>
             ) : (
                 area.visits.map((v) => {
@@ -385,6 +423,7 @@ const styles = StyleSheet.create({
     captureText: { fontSize: 14, fontWeight: '700', color: colors.navy },
     empty: { color: colors.mutedink, paddingVertical: spacing.md },
     visitCard: { gap: spacing.sm },
+    visitCardPending: { borderWidth: 1, borderColor: '#f0dca8', backgroundColor: '#fffaf0' },
     visitTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
     visitName: { flex: 1, fontSize: 15, fontWeight: '700', color: colors.ink },
     visitNote: { fontSize: 14, color: colors.ink },

@@ -29,21 +29,57 @@ Manager), `hendra.gunawan@permana.net.id` (Sales Manager).
 
 ```
 src/
-  config.ts              # URL API + nama perangkat token
+  config.ts              # URL API + nama perangkat token (lewat EXPO_PUBLIC_*)
+  fonts.ts               # pemetaan global fontWeight → Plus Jakarta Sans
   theme.ts               # token warna Permana (mirror dari web)
   types/api.ts           # bentuk respons API
   api/client.ts          # apiFetch + ApiError + bearer token
   auth/AuthContext.tsx   # login/logout, simpan token, hidrasi /me
-  components/ui.tsx       # Button, Card, Field, Pill, StagePill
-  navigation/            # RootNavigator (auth gate) + TabNavigator
-  screens/               # Login, Home, Pipeline, Placeholder
+  offline/               # antrean outbox, konteks konektivitas, SyncBanner
+  components/ui.tsx       # Button, Card, Field, Pill, StagePill, ProgressRing
+  navigation/            # RootNavigator (auth gate) + Tab + Home/Pipeline/More stack
+  screens/               # Login, Home, Pipeline, LeadDetail, Schedule, More, dst.
 ```
+
+## Mode offline
+
+Mutasi lapangan (check-in/out absensi, kunjungan canvassing, log aktivitas lead)
+memakai **outbox** yang tahan restart (`src/offline/`):
+
+- `submitOrQueue()` mencoba kirim; kalau perangkat offline atau jaringan putus,
+  item masuk antrean AsyncStorage dan tetap diproses nanti.
+- `OfflineContext` memantau konektivitas (NetInfo) + status foreground app, lalu
+  mem-*flush* antrean otomatis saat online kembali. Error server (`ApiError`)
+  tidak di-antre ulang — hanya kegagalan koneksi.
+- `SyncBanner` muncul di Home, Absensi, Canvassing, dan Detail lead saat offline
+  atau masih ada item menunggu sinkron. Baris optimistik berlabel "Pending sync".
+
+## Build rilis (EAS)
+
+Profil build ada di [`eas.json`](eas.json): `development` (simulator + dev
+client), `preview` (internal / APK, backend staging), `production` (store).
+URL API tiap profil diset lewat `EXPO_PUBLIC_API_BASE_URL` — sesuaikan host
+staging/produksi sebelum build.
+
+```bash
+npm install --global eas-cli      # sekali saja
+eas login                         # akun Expo milik tim
+eas init                          # tautkan projectId (menulis extra.eas.projectId)
+eas build --profile preview --platform android   # APK internal
+eas build --profile production --platform all    # iOS + Android untuk store
+eas submit --profile production --platform ios    # unggah ke App Store Connect
+```
+
+> Build EAS berjalan di cloud Expo dan butuh login akun Expo + kredensial
+> store, jadi tidak dapat dijalankan dari lingkungan ini — langkah di atas
+> dijalankan oleh tim. `eas init` akan menambahkan `extra.eas.projectId` ke
+> `app.json`.
 
 ## Peta jalan (milestone)
 
 - **M0 ✅** Login + sesi token, navigasi tab, Pipeline (daftar lead) dari API.
-- **M1** Detail lead + aktivitas, Jadwal.
-- **M2** Absensi (selfie + GPS + geofence).
-- **M3** Canvassing + foto (perlu kolom foto di API `canvass_visits`).
-- **M4** Quotation, target, laporan, notifikasi.
-- **M5** Antrean offline + build rilis (iOS/Android).
+- **M1 ✅** Detail lead + aktivitas, Jadwal.
+- **M2 ✅** Absensi (selfie + GPS + geofence).
+- **M3 ✅** Canvassing + foto.
+- **M4 ✅** Quotation, target, laporan, notifikasi.
+- **M5 ✅** Antrean offline + persiapan build rilis (profil EAS).

@@ -15,8 +15,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiFetch, ApiError } from '../api/client';
 import { Button, Card, Pill } from '../components/ui';
+import { useOffline } from '../offline/OfflineContext';
+import SyncBanner from '../offline/SyncBanner';
+import { submitOrQueue } from '../offline/sync';
 import { colors, radius, spacing } from '../theme';
-import type { Attendance, AttendanceIndex, Geofence } from '../types/api';
+import type { Attendance, AttendanceIndex } from '../types/api';
 
 type Coords = { lat: number; lng: number };
 
@@ -63,6 +66,7 @@ function metresLabel(m: number): string {
 }
 
 export default function AttendanceScreen() {
+    const { online } = useOffline();
     const [data, setData] = useState<AttendanceIndex | null>(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -74,6 +78,9 @@ export default function AttendanceScreen() {
     const [reasonRequired, setReasonRequired] = useState(false);
     const [locating, setLocating] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    // Set when an action is queued offline, so the UI reflects it before sync.
+    const [pendingCheckIn, setPendingCheckIn] = useState(false);
+    const [pendingCheckOut, setPendingCheckOut] = useState(false);
 
     const load = useCallback(async () => {
         try {
@@ -161,8 +168,10 @@ export default function AttendanceScreen() {
         setSubmitting(true);
         setError(undefined);
         try {
-            await apiFetch<Attendance>('/attendance/check-in', {
-                method: 'POST',
+            const res = await submitOrQueue<Attendance>(online, {
+                kind: 'checkin',
+                label: 'Check-in',
+                path: '/attendance/check-in',
                 body: {
                     lat: coords.lat,
                     lng: coords.lng,
@@ -174,7 +183,12 @@ export default function AttendanceScreen() {
             setSelfie(null);
             setReason('');
             setReasonRequired(false);
-            await load();
+            if (res.queued) {
+                setPendingCheckIn(true);
+                Alert.alert('Saved offline', 'Your check-in will sync automatically when you’re back online.');
+            } else {
+                await load();
+            }
         } catch (e) {
             if (e instanceof ApiError && e.status === 422 && /geofence|area|luar/i.test(e.message)) {
                 // Server rejected for being outside — reveal the reason field.
@@ -194,11 +208,18 @@ export default function AttendanceScreen() {
         try {
             const where = await captureLocation();
             if (!where) return;
-            await apiFetch<Attendance>('/attendance/check-out', {
-                method: 'POST',
+            const res = await submitOrQueue<Attendance>(online, {
+                kind: 'checkout',
+                label: 'Check-out',
+                path: '/attendance/check-out',
                 body: { lat: where.lat, lng: where.lng },
             });
-            await load();
+            if (res.queued) {
+                setPendingCheckOut(true);
+                Alert.alert('Saved offline', 'Your check-out will sync automatically when you’re back online.');
+            } else {
+                await load();
+            }
         } catch (e) {
             setError(e instanceof ApiError ? e.message : 'Couldn’t check out.');
         } finally {
@@ -214,8 +235,9 @@ export default function AttendanceScreen() {
         );
     }
 
-    const checkedIn = !!today?.check_in_at;
-    const checkedOut = !!today?.check_out_at;
+    const checkedIn = !!today?.check_in_at || pendingCheckIn;
+    const checkedOut = !!today?.check_out_at || pendingCheckOut;
+    const pendingSync = pendingCheckIn || pendingCheckOut;
 
     return (
         <SafeAreaView style={styles.safe} edges={[]}>
@@ -237,6 +259,8 @@ export default function AttendanceScreen() {
                     <Text style={styles.subtitle}>{fullDate()}</Text>
                 </View>
 
+                <SyncBanner />
+
                 {geofence ? (
                     <Card style={{ gap: spacing.xs }}>
                         <Text style={styles.cardLabel}>Office</Text>
@@ -252,7 +276,9 @@ export default function AttendanceScreen() {
                 <Card style={{ gap: spacing.sm }}>
                     <View style={styles.rowBetween}>
                         <Text style={styles.cardLabel}>Today</Text>
-                        {checkedOut ? (
+                        {pendingSync ? (
+                            <Pill bg="#fff2d6" fg="#8a5e00">Pending sync</Pill>
+                        ) : checkedOut ? (
                             <Pill bg="#dff3e8" fg="#137347">Done</Pill>
                         ) : checkedIn ? (
                             <Pill bg="#e8eff4" fg="#2c5d78">Checked in</Pill>
@@ -261,7 +287,7 @@ export default function AttendanceScreen() {
                         )}
                     </View>
 
-                    {checkedIn ? (
+                    {today ? (
                         <>
                             <View style={styles.timeRow}>
                                 <TimeStat label="In" value={timeOf(today!.check_in_at!)} />
@@ -286,6 +312,10 @@ export default function AttendanceScreen() {
                                 <Text style={styles.reasonNote}>Reason: {today!.check_in_reason}</Text>
                             ) : null}
                         </>
+                    ) : pendingCheckIn ? (
+                        <Text style={styles.officeSub}>
+                            Check-in saved on this device — it’ll sync when you’re back online.
+                        </Text>
                     ) : (
                         <Text style={styles.officeSub}>Capture a selfie and location to check in.</Text>
                     )}

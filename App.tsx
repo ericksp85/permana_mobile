@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/auth/AuthContext';
 import { installJakartaFont, jakartaFontMap } from './src/fonts';
 import RootNavigator from './src/navigation/RootNavigator';
+import { OfflineProvider } from './src/offline/OfflineContext';
 import { colors } from './src/theme';
 
 // Map fontWeight → Jakarta family globally before any Text renders.
@@ -24,12 +25,14 @@ export default function App() {
 
     return (
         <SafeAreaProvider>
-            <AuthProvider>
-                <NavigationContainer>
-                    <StatusBar style="dark" />
-                    <RootNavigator />
-                </NavigationContainer>
-            </AuthProvider>
+            <OfflineProvider>
+                <AuthProvider>
+                    <NavigationContainer>
+                        <StatusBar style="dark" />
+                        <RootNavigator />
+                    </NavigationContainer>
+                </AuthProvider>
+            </OfflineProvider>
         </SafeAreaProvider>
     );
 }
