@@ -19,12 +19,12 @@ import {
 } from '../types/api';
 
 const FILTERS: { value: QuotationStatus | 'all'; label: string }[] = [
-    { value: 'all', label: 'Semua' },
-    { value: 'verifying', label: 'Verifikasi' },
-    { value: 'waiting_gm', label: 'Tunggu GM' },
-    { value: 'approved', label: 'Disetujui' },
-    { value: 'returned', label: 'Dikembalikan' },
-    { value: 'sent', label: 'Terkirim' },
+    { value: 'all', label: 'All' },
+    { value: 'verifying', label: 'Verifying' },
+    { value: 'waiting_gm', label: 'Waiting GM' },
+    { value: 'approved', label: 'Approved' },
+    { value: 'returned', label: 'Returned' },
+    { value: 'sent', label: 'Sent' },
 ];
 
 /** A four-dot stepper: request → verify → approve → send. */
@@ -56,7 +56,7 @@ export default function QuotationsScreen() {
             });
             setItems(res.data);
         } catch {
-            setError('Gagal memuat penawaran.');
+            setError('Couldn’t load quotations.');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -113,7 +113,7 @@ export default function QuotationsScreen() {
                         tintColor={colors.navy}
                     />
                 }
-                ListEmptyComponent={<Text style={styles.empty}>{error ?? 'Belum ada penawaran.'}</Text>}
+                ListEmptyComponent={<Text style={styles.empty}>{error ?? 'No quotations yet.'}</Text>}
                 renderItem={({ item }) => {
                     const st = QUOTATION_STATUS_STYLE[item.status];
                     return (
@@ -128,10 +128,10 @@ export default function QuotationsScreen() {
                             </View>
                             {item.number ? <Text style={styles.number}>{item.number}</Text> : null}
                             <View style={styles.bottom}>
-                                <Text style={styles.mrc}>{rupiah(item.net_mrc)}/bln</Text>
+                                <Text style={styles.mrc}>{rupiah(item.net_mrc)}/mo</Text>
                                 <Text style={styles.terms}>
-                                    {item.term_months} bln
-                                    {item.discount_pct > 0 ? ` · disk ${item.discount_pct}%` : ''}
+                                    {item.term_months} mo
+                                    {item.discount_pct > 0 ? ` · ${item.discount_pct}% off` : ''}
                                 </Text>
                             </View>
                             <QuotationStepper step={item.completed_step} />

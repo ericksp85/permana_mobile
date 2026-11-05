@@ -48,7 +48,7 @@ export default function TargetsScreen() {
     if (!data) {
         return (
             <View style={styles.center}>
-                <Text style={styles.empty}>Gagal memuat target.</Text>
+                <Text style={styles.empty}>Couldn’t load targets.</Text>
             </View>
         );
     }
@@ -57,7 +57,7 @@ export default function TargetsScreen() {
         <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
             {data.me ? (
                 <Card style={{ gap: spacing.md }}>
-                    <Text style={styles.cardTitle}>Target saya · bulan ini</Text>
+                    <Text style={styles.cardTitle}>My target · this month</Text>
                     <View style={styles.meTop}>
                         <Text style={styles.meWon}>{rupiahShort(data.me.won)}</Text>
                         <Text style={styles.meTarget}>/ {rupiahShort(data.me.mrc_target)}</Text>
@@ -65,7 +65,7 @@ export default function TargetsScreen() {
                     </View>
                     <Bar pct={data.me.pct} />
                     <View style={styles.annualRow}>
-                        <Text style={styles.annualLabel}>Tahunan</Text>
+                        <Text style={styles.annualLabel}>Annual target {new Date().getFullYear()}</Text>
                         <Text style={styles.annualVal}>
                             {rupiahShort(data.me.annual_won)} / {rupiahShort(data.me.annual_target)}
                         </Text>
@@ -73,9 +73,13 @@ export default function TargetsScreen() {
                 </Card>
             ) : null}
 
+            {data.teams.length === 0 ? (
+                <Text style={styles.footnote}>Targets are set by your Sales Manager.</Text>
+            ) : null}
+
             {data.teams.length > 0 ? (
                 <View style={{ gap: spacing.sm }}>
-                    <Text style={styles.sectionTitle}>Tim</Text>
+                    <Text style={styles.sectionTitle}>Team</Text>
                     {data.teams.map((t) => (
                         <TeamCard key={t.id} team={t} />
                     ))}
@@ -106,10 +110,10 @@ function TeamCard({ team }: { team: TargetTeam }) {
                 <Text style={styles.sub}>
                     {rupiahShort(team.won)} / {rupiahShort(team.mrc_target)}
                 </Text>
-                <Text style={styles.sub}>{team.members} AM</Text>
+                <Text style={styles.sub}>{team.members} AMs</Text>
             </View>
             {team.under_sum ? (
-                <Text style={styles.warn}>Jumlah target AM melebihi target tim</Text>
+                <Text style={styles.warn}>AM targets exceed the team target</Text>
             ) : null}
         </Card>
     );
@@ -153,5 +157,6 @@ const styles = StyleSheet.create({
     pct: { fontSize: 16, fontWeight: '800', color: colors.teal },
     sub: { fontSize: 13, color: colors.mutedink },
     warn: { fontSize: 12, color: colors.warning, fontWeight: '600' },
+    footnote: { fontSize: 13, color: colors.mutedink, textAlign: 'center' },
     empty: { color: colors.mutedink },
 });

@@ -30,7 +30,7 @@ export default function LoginScreen() {
             if (e instanceof ApiError) {
                 setError(e.firstError() ?? e.message);
             } else {
-                setError('Tidak bisa terhubung ke server. Cek koneksi.');
+                setError('Can’t reach the server. Check your connection.');
             }
         } finally {
             setLoading(false);
@@ -53,15 +53,15 @@ export default function LoginScreen() {
                             style={styles.logo}
                         />
                         <Text style={styles.title}>Permana Sales</Text>
-                        <Text style={styles.subtitle}>Aplikasi lapangan</Text>
+                        <Text style={styles.subtitle}>Every lead, visit and deal — in one app.</Text>
                     </View>
 
                     <View style={styles.form}>
                         <Field
-                            label="Email"
+                            label="Work email"
                             value={email}
                             onChangeText={setEmail}
-                            placeholder="nama@permana.net.id"
+                            placeholder="name@permana.net.id"
                             autoCapitalize="none"
                             autoCorrect={false}
                             keyboardType="email-address"
@@ -76,7 +76,7 @@ export default function LoginScreen() {
                             textContentType="password"
                             error={error}
                         />
-                        <Button label="Masuk" onPress={submit} loading={loading} />
+                        <Button label="Sign in" onPress={submit} loading={loading} />
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -95,6 +95,6 @@ const styles = StyleSheet.create({
     brand: { alignItems: 'center', gap: spacing.sm },
     logo: { width: 72, height: 72, borderRadius: 18 },
     title: { fontSize: 24, fontWeight: '800', color: colors.ink },
-    subtitle: { fontSize: 14, color: colors.mutedink },
+    subtitle: { fontSize: 14, color: colors.mutedink, textAlign: 'center' },
     form: { gap: spacing.lg },
 });

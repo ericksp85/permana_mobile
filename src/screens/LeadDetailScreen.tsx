@@ -1,6 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import {
     ActivityIndicator,
+    Linking,
     Pressable,
     ScrollView,
     StyleSheet,
@@ -27,14 +29,14 @@ import {
 } from '../types/api';
 
 const VERIFICATION: Record<string, { bg: string; fg: string; label: string }> = {
-    verified: { bg: '#dff3e8', fg: '#137347', label: 'Terverifikasi' },
-    unverified: { bg: '#fff2d6', fg: '#8a5e00', label: 'Belum verifikasi' },
-    rejected: { bg: '#fbe6e6', fg: '#a83434', label: 'Ditolak' },
+    verified: { bg: '#dff3e8', fg: '#137347', label: 'Verified' },
+    unverified: { bg: '#fff2d6', fg: '#8a5e00', label: 'Unverified' },
+    rejected: { bg: '#fbe6e6', fg: '#a83434', label: 'Rejected' },
 };
 
 function formatDateTime(iso: string): string {
     const d = new Date(iso);
-    return d.toLocaleString('id-ID', {
+    return d.toLocaleString('en-US', {
         day: 'numeric',
         month: 'short',
         hour: '2-digit',
@@ -71,7 +73,7 @@ export default function LeadDetailScreen({
             setLead(leadRes.data);
             setQuotations(quoteRes.data);
         } catch {
-            setError('Gagal memuat detail lead.');
+            setError('Couldn’t load lead details.');
         } finally {
             setLoading(false);
         }
@@ -92,7 +94,7 @@ export default function LeadDetailScreen({
             setType('CALL');
             await load();
         } catch (e) {
-            setError(e instanceof ApiError ? e.message : 'Gagal mencatat aktivitas.');
+            setError(e instanceof ApiError ? e.message : 'Couldn’t log activity.');
         } finally {
             setSaving(false);
         }
@@ -109,7 +111,7 @@ export default function LeadDetailScreen({
     if (!lead) {
         return (
             <View style={styles.center}>
-                <Text style={styles.error}>{error ?? 'Lead tidak ditemukan.'}</Text>
+                <Text style={styles.error}>{error ?? 'Lead not found.'}</Text>
             </View>
         );
     }
@@ -134,10 +136,43 @@ export default function LeadDetailScreen({
                         {lead.contact_title ? ` · ${lead.contact_title}` : ''}
                     </Text>
                 ) : null}
-                {lead.phone ? <Info label="Telepon" value={lead.phone} /> : null}
-                {lead.address ? <Info label="Alamat" value={lead.address} /> : null}
+                {lead.phone || (lead.lat !== null && lead.lng !== null) ? (
+                    <View style={styles.contactActions}>
+                        {lead.phone ? (
+                            <ContactAction
+                                icon="call-outline"
+                                label="Call"
+                                onPress={() => Linking.openURL(`tel:${lead.phone}`)}
+                            />
+                        ) : null}
+                        {lead.phone ? (
+                            <ContactAction
+                                icon="logo-whatsapp"
+                                label="WhatsApp"
+                                onPress={() =>
+                                    Linking.openURL(
+                                        `https://wa.me/${lead.phone!.replace(/[^0-9]/g, '')}`,
+                                    )
+                                }
+                            />
+                        ) : null}
+                        {lead.lat !== null && lead.lng !== null ? (
+                            <ContactAction
+                                icon="navigate-outline"
+                                label="Navigate"
+                                onPress={() =>
+                                    Linking.openURL(
+                                        `https://maps.google.com/?q=${lead.lat},${lead.lng}`,
+                                    )
+                                }
+                            />
+                        ) : null}
+                    </View>
+                ) : null}
+                {lead.phone ? <Info label="Phone" value={lead.phone} /> : null}
+                {lead.address ? <Info label="Address" value={lead.address} /> : null}
                 {lead.bandwidth ? <Info label="Bandwidth" value={lead.bandwidth} /> : null}
-                {lead.next_step ? <Info label="Langkah berikutnya" value={lead.next_step} /> : null}
+                {lead.next_step ? <Info label="Next step" value={lead.next_step} /> : null}
             </Card>
 
             <QuotationSection
@@ -149,7 +184,7 @@ export default function LeadDetailScreen({
             />
 
             <Card style={{ gap: spacing.md }}>
-                <Text style={styles.sectionTitle}>Catat aktivitas</Text>
+                <Text style={styles.sectionTitle}>Log activity</Text>
                 <View style={styles.chips}>
                     {LOGGABLE_TYPES.map((t) => {
                         const active = t.value === type;
@@ -169,17 +204,17 @@ export default function LeadDetailScreen({
                 <TextInput
                     value={note}
                     onChangeText={setNote}
-                    placeholder="Catatan (opsional)"
+                    placeholder="Note (optional)"
                     placeholderTextColor={colors.mutedink}
                     style={styles.noteInput}
                     multiline
                 />
-                <Button label="Simpan aktivitas" onPress={logActivity} loading={saving} />
+                <Button label="Save activity" onPress={logActivity} loading={saving} />
             </Card>
 
-            <Text style={styles.sectionTitle}>Timeline</Text>
+            <Text style={styles.sectionTitle}>Activity</Text>
             {lead.activities.length === 0 ? (
-                <Text style={styles.empty}>Belum ada aktivitas.</Text>
+                <Text style={styles.empty}>No activity yet.</Text>
             ) : (
                 lead.activities.map((a) => (
                     <View key={a.id} style={styles.timelineRow}>
@@ -230,7 +265,7 @@ function QuotationSection({
 
     const submit = async () => {
         if (mrcNum < 1) {
-            setErr('MRC wajib diisi.');
+            setErr('MRC is required.');
             return;
         }
         setBusy(true);
@@ -250,7 +285,7 @@ function QuotationSection({
             setOtc('');
             await onChanged();
         } catch (e) {
-            setErr(e instanceof ApiError ? e.message : 'Gagal mengirim penawaran.');
+            setErr(e instanceof ApiError ? e.message : 'Couldn’t submit quotation.');
         } finally {
             setBusy(false);
         }
@@ -264,7 +299,7 @@ function QuotationSection({
             await apiFetch(`/quotations/${latest.id}/send`, { method: 'POST' });
             await onChanged();
         } catch (e) {
-            setErr(e instanceof ApiError ? e.message : 'Gagal mengirim ke klien.');
+            setErr(e instanceof ApiError ? e.message : 'Couldn’t send to client.');
         } finally {
             setBusy(false);
         }
@@ -272,51 +307,51 @@ function QuotationSection({
 
     return (
         <Card style={{ gap: spacing.md }}>
-            <Text style={styles.sectionTitle}>Penawaran</Text>
+            <Text style={styles.sectionTitle}>Quotation</Text>
 
             {quotations.map((q) => {
                 const st = QUOTATION_STATUS_STYLE[q.status];
                 return (
                     <View key={q.id} style={styles.quote}>
                         <View style={styles.rowBetween}>
-                            <Text style={styles.quoteMrc}>{rupiah(q.net_mrc)}/bln</Text>
+                            <Text style={styles.quoteMrc}>{rupiah(q.net_mrc)}/mo</Text>
                             <Pill bg={st.bg} fg={st.fg}>
                                 {q.status_label}
                             </Pill>
                         </View>
                         <Text style={styles.quoteTerms}>
                             {q.number ? `${q.number} · ` : ''}
-                            {q.term_months} bln
-                            {q.discount_pct > 0 ? ` · diskon ${q.discount_pct}%` : ''}
+                            {q.term_months} mo
+                            {q.discount_pct > 0 ? ` · ${q.discount_pct}% off` : ''}
                         </Text>
                         <QuotationStepper step={q.completed_step} />
                         {q.status === 'returned' && q.admin_note ? (
-                            <Text style={styles.quoteNote}>Dikembalikan: {q.admin_note}</Text>
+                            <Text style={styles.quoteNote}>Returned: {q.admin_note}</Text>
                         ) : null}
                         {q.status === 'rejected' && q.gm_note ? (
-                            <Text style={styles.quoteNote}>Ditolak: {q.gm_note}</Text>
+                            <Text style={styles.quoteNote}>Rejected: {q.gm_note}</Text>
                         ) : null}
                     </View>
                 );
             })}
 
             {quotations.length === 0 && !showForm ? (
-                <Text style={styles.empty}>Belum ada penawaran.</Text>
+                <Text style={styles.empty}>No quotation yet.</Text>
             ) : null}
 
             {showSend ? (
-                <Button label="Kirim ke klien" onPress={send} loading={busy} />
+                <Button label="Send to client" onPress={send} loading={busy} />
             ) : null}
 
             {showForm ? (
                 <View style={{ gap: spacing.md }}>
                     <Text style={styles.formTitle}>
-                        {bounced ? 'Perbaiki & kirim ulang' : 'Buat penawaran'}
+                        {bounced ? 'Revise & resubmit' : 'Request quotation'}
                     </Text>
                     <TextInput
                         value={bandwidth}
                         onChangeText={setBandwidth}
-                        placeholder="Bandwidth (mis. 50 Mbps)"
+                        placeholder="Bandwidth (e.g. 50 Mbps)"
                         placeholderTextColor={colors.mutedink}
                         style={styles.input}
                     />
@@ -324,7 +359,7 @@ function QuotationSection({
                         <TextInput
                             value={mrc}
                             onChangeText={setMrc}
-                            placeholder="MRC / bln"
+                            placeholder="MRC / mo"
                             placeholderTextColor={colors.mutedink}
                             keyboardType="number-pad"
                             style={[styles.input, { flex: 1 }]}
@@ -332,30 +367,35 @@ function QuotationSection({
                         <TextInput
                             value={otc}
                             onChangeText={setOtc}
-                            placeholder="OTC (opsional)"
+                            placeholder="OTC (optional)"
                             placeholderTextColor={colors.mutedink}
                             keyboardType="number-pad"
                             style={[styles.input, { flex: 1 }]}
                         />
                     </View>
                     <OptionRow
-                        label="Tenor"
-                        options={QUOTATION_TERMS.map((t) => ({ value: t, label: `${t} bln` }))}
+                        label="Contract term"
+                        options={QUOTATION_TERMS.map((t) => ({ value: t, label: `${t} mo` }))}
                         value={term}
                         onChange={setTerm}
                     />
                     <OptionRow
-                        label="Diskon"
+                        label="Discount"
                         options={QUOTATION_DISCOUNTS.map((d) => ({ value: d, label: `${d}%` }))}
                         value={discount}
                         onChange={setDiscount}
                     />
                     {mrcNum > 0 ? (
-                        <Text style={styles.netPreview}>Net MRC: {rupiah(netPreview)}/bln</Text>
+                        <Text style={styles.netPreview}>Net MRC: {rupiah(netPreview)}/mo</Text>
+                    ) : null}
+                    {discount >= 10 ? (
+                        <Text style={styles.discountHint}>
+                            Discount ≥ 10% — add a justification note for the GM.
+                        </Text>
                     ) : null}
                     {err ? <Text style={styles.error}>{err}</Text> : null}
                     <Button
-                        label={bounced ? 'Kirim ulang' : 'Kirim penawaran'}
+                        label={bounced ? 'Resubmit' : 'Submit for verification'}
                         onPress={submit}
                         loading={busy}
                     />
@@ -401,6 +441,26 @@ function OptionRow<T extends number>({
     );
 }
 
+function ContactAction({
+    icon,
+    label,
+    onPress,
+}: {
+    icon: keyof typeof Ionicons.glyphMap;
+    label: string;
+    onPress: () => void;
+}) {
+    return (
+        <Pressable
+            onPress={onPress}
+            style={({ pressed }) => [styles.contactAction, pressed && { opacity: 0.6 }]}
+        >
+            <Ionicons name={icon} size={18} color={colors.navy} />
+            <Text style={styles.contactActionText}>{label}</Text>
+        </Pressable>
+    );
+}
+
 function Info({ label, value }: { label: string; value: string }) {
     return (
         <View style={styles.info}>
@@ -417,6 +477,20 @@ const styles = StyleSheet.create({
     error: { color: colors.danger, fontSize: 13 },
     rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     contact: { fontSize: 16, fontWeight: '700', color: colors.ink },
+    contactActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
+    contactAction: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        height: 42,
+        borderRadius: radius.btn,
+        borderWidth: 1,
+        borderColor: colors.line,
+        backgroundColor: colors.softbg,
+    },
+    contactActionText: { fontSize: 13, fontWeight: '700', color: colors.navy },
     info: { gap: 2 },
     infoLabel: { fontSize: 11, fontWeight: '700', color: colors.mutedink, textTransform: 'uppercase' },
     infoValue: { fontSize: 15, color: colors.ink },
@@ -470,4 +544,5 @@ const styles = StyleSheet.create({
     amountRow: { flexDirection: 'row', gap: spacing.sm },
     optLabel: { fontSize: 12, fontWeight: '700', color: colors.mutedink },
     netPreview: { fontSize: 14, fontWeight: '700', color: colors.teal },
+    discountHint: { fontSize: 12, color: colors.warning, fontWeight: '600' },
 });

@@ -11,11 +11,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiFetch } from '../api/client';
 import { Card } from '../components/ui';
-import type { CanvassStackScreenProps } from '../navigation/types';
+import type { MoreStackScreenProps } from '../navigation/types';
 import { colors, radius, spacing } from '../theme';
 import type { CanvassArea } from '../types/api';
 
-export default function CanvassScreen({ navigation }: CanvassStackScreenProps<'CanvassList'>) {
+export default function CanvassScreen({ navigation }: MoreStackScreenProps<'CanvassList'>) {
     const [areas, setAreas] = useState<CanvassArea[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -27,7 +27,7 @@ export default function CanvassScreen({ navigation }: CanvassStackScreenProps<'C
             const res = await apiFetch<{ data: CanvassArea[] }>('/canvass');
             setAreas(res.data);
         } catch {
-            setError('Gagal memuat area. Tarik untuk coba lagi.');
+            setError('Couldn’t load areas. Pull to retry.');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -53,10 +53,10 @@ export default function CanvassScreen({ navigation }: CanvassStackScreenProps<'C
     }
 
     return (
-        <SafeAreaView style={styles.safe} edges={['top']}>
+        <SafeAreaView style={styles.safe} edges={[]}>
             <View style={styles.header}>
                 <Text style={styles.title}>Canvassing</Text>
-                <Text style={styles.count}>{areas.length} area</Text>
+                <Text style={styles.count}>{areas.length} areas</Text>
             </View>
             <FlatList
                 data={areas}
@@ -65,7 +65,7 @@ export default function CanvassScreen({ navigation }: CanvassStackScreenProps<'C
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.navy} />
                 }
-                ListEmptyComponent={<Text style={styles.empty}>{error ?? 'Belum ada area.'}</Text>}
+                ListEmptyComponent={<Text style={styles.empty}>{error ?? 'No areas yet.'}</Text>}
                 renderItem={({ item }) => {
                     const units = item.visits_count ?? 0;
                     const pct = item.target_units > 0 ? Math.min(1, units / item.target_units) : 0;
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
         paddingTop: spacing.sm,
         paddingBottom: spacing.md,
     },
-    title: { fontSize: 24, fontWeight: '800', color: colors.ink },
+    title: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5, color: colors.ink },
     count: { fontSize: 13, fontWeight: '700', color: colors.mutedink },
     list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, gap: spacing.md },
     areaCard: { gap: spacing.md },

@@ -15,7 +15,7 @@ import type { NotificationItem, NotificationsResponse } from '../types/api';
 
 function whenLabel(iso: string | null): string {
     if (!iso) return '';
-    return new Date(iso).toLocaleString('id-ID', {
+    return new Date(iso).toLocaleString('en-US', {
         day: 'numeric',
         month: 'short',
         hour: '2-digit',
@@ -39,7 +39,7 @@ export default function NotificationsScreen() {
             setItems(res.data);
             setUnread(res.unread);
         } catch {
-            setError('Gagal memuat notifikasi.');
+            setError('Couldn’t load notifications.');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -83,9 +83,9 @@ export default function NotificationsScreen() {
         <View style={styles.screen}>
             {unread > 0 ? (
                 <View style={styles.bar}>
-                    <Text style={styles.unread}>{unread} belum dibaca</Text>
+                    <Text style={styles.unread}>{unread} unread</Text>
                     <Pressable onPress={markAll} hitSlop={8}>
-                        <Text style={styles.markAll}>Tandai semua dibaca</Text>
+                        <Text style={styles.markAll}>Mark all read</Text>
                     </Pressable>
                 </View>
             ) : null}
@@ -104,7 +104,7 @@ export default function NotificationsScreen() {
                     />
                 }
                 ListEmptyComponent={
-                    <Text style={styles.empty}>{error ?? 'Belum ada notifikasi.'}</Text>
+                    <Text style={styles.empty}>{error ?? 'No notifications'}</Text>
                 }
                 renderItem={({ item }) => (
                     <Pressable
@@ -115,7 +115,7 @@ export default function NotificationsScreen() {
                             <View style={styles.itemTop}>
                                 {!item.read ? <View style={styles.dot} /> : null}
                                 <Text style={styles.title} numberOfLines={1}>
-                                    {item.title ?? item.tag ?? 'Notifikasi'}
+                                    {item.title ?? item.tag ?? 'Notification'}
                                 </Text>
                                 <Text style={styles.when}>{whenLabel(item.created_at)}</Text>
                             </View>

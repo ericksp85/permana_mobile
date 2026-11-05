@@ -37,14 +37,24 @@ function distanceMeters(a: Coords, b: Coords): number {
 }
 
 function timeOf(iso: string): string {
-    return new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 
 function dayOf(dateStr: string): string {
-    return new Date(dateStr + 'T00:00:00').toLocaleDateString('id-ID', {
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
         weekday: 'short',
         day: 'numeric',
         month: 'short',
+    });
+}
+
+/** "Tuesday, 3 November 2026" — the design's attendance date line. */
+function fullDate(): string {
+    return new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
     });
 }
 
@@ -71,7 +81,7 @@ export default function AttendanceScreen() {
             const res = await apiFetch<AttendanceIndex>('/attendance');
             setData(res);
         } catch {
-            setError('Gagal memuat data absensi.');
+            setError('Couldn’t load attendance.');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -95,7 +105,7 @@ export default function AttendanceScreen() {
     const captureLocation = async (): Promise<Coords | null> => {
         const perm = await Location.requestForegroundPermissionsAsync();
         if (perm.status !== 'granted') {
-            Alert.alert('Izin lokasi', 'Aktifkan izin lokasi untuk melakukan absensi.');
+            Alert.alert('Location permission', 'Enable location to record attendance.');
             return null;
         }
         const pos = await Location.getCurrentPositionAsync({
@@ -107,7 +117,7 @@ export default function AttendanceScreen() {
     const takeSelfie = async (): Promise<Selfie | null> => {
         const perm = await ImagePicker.requestCameraPermissionsAsync();
         if (!perm.granted) {
-            Alert.alert('Izin kamera', 'Aktifkan izin kamera untuk mengambil selfie absensi.');
+            Alert.alert('Camera permission', 'Enable the camera to take your check-in selfie.');
             return null;
         }
         const result = await ImagePicker.launchCameraAsync({
@@ -135,7 +145,7 @@ export default function AttendanceScreen() {
             if (!shot) return;
             setSelfie(shot);
         } catch {
-            setError('Gagal mengambil lokasi atau foto.');
+            setError('Couldn’t capture location or photo.');
         } finally {
             setLocating(false);
         }
@@ -145,7 +155,7 @@ export default function AttendanceScreen() {
         if (!coords || !selfie) return;
         if ((reasonRequired || likelyOutside) && !reason.trim()) {
             setReasonRequired(true);
-            setError('Anda di luar area kantor — isi alasan untuk tetap absen.');
+            setError('You’re outside the office area — add a reason to check in anyway.');
             return;
         }
         setSubmitting(true);
@@ -169,9 +179,9 @@ export default function AttendanceScreen() {
             if (e instanceof ApiError && e.status === 422 && /geofence|area|luar/i.test(e.message)) {
                 // Server rejected for being outside — reveal the reason field.
                 setReasonRequired(true);
-                setError('Anda di luar area kantor — isi alasan untuk tetap absen.');
+                setError('You’re outside the office area — add a reason to check in anyway.');
             } else {
-                setError(e instanceof ApiError ? e.message : 'Gagal check-in.');
+                setError(e instanceof ApiError ? e.message : 'Couldn’t check in.');
             }
         } finally {
             setSubmitting(false);
@@ -190,7 +200,7 @@ export default function AttendanceScreen() {
             });
             await load();
         } catch (e) {
-            setError(e instanceof ApiError ? e.message : 'Gagal check-out.');
+            setError(e instanceof ApiError ? e.message : 'Couldn’t check out.');
         } finally {
             setSubmitting(false);
         }
@@ -208,7 +218,7 @@ export default function AttendanceScreen() {
     const checkedOut = !!today?.check_out_at;
 
     return (
-        <SafeAreaView style={styles.safe} edges={['top']}>
+        <SafeAreaView style={styles.safe} edges={[]}>
             <ScrollView
                 contentContainerStyle={styles.content}
                 refreshControl={
@@ -222,11 +232,14 @@ export default function AttendanceScreen() {
                     />
                 }
             >
-                <Text style={styles.title}>Absensi</Text>
+                <View style={{ gap: 2 }}>
+                    <Text style={styles.title}>Attendance</Text>
+                    <Text style={styles.subtitle}>{fullDate()}</Text>
+                </View>
 
                 {geofence ? (
                     <Card style={{ gap: spacing.xs }}>
-                        <Text style={styles.cardLabel}>Kantor</Text>
+                        <Text style={styles.cardLabel}>Office</Text>
                         <Text style={styles.office}>{geofence.name}</Text>
                         {geofence.address ? (
                             <Text style={styles.officeSub}>{geofence.address}</Text>
@@ -238,43 +251,43 @@ export default function AttendanceScreen() {
                 {/* Today's status */}
                 <Card style={{ gap: spacing.sm }}>
                     <View style={styles.rowBetween}>
-                        <Text style={styles.cardLabel}>Hari ini</Text>
+                        <Text style={styles.cardLabel}>Today</Text>
                         {checkedOut ? (
-                            <Pill bg="#dff3e8" fg="#137347">Selesai</Pill>
+                            <Pill bg="#dff3e8" fg="#137347">Done</Pill>
                         ) : checkedIn ? (
-                            <Pill bg="#e8eff4" fg="#2c5d78">Sudah check-in</Pill>
+                            <Pill bg="#e8eff4" fg="#2c5d78">Checked in</Pill>
                         ) : (
-                            <Pill bg="#fff2d6" fg="#8a5e00">Belum absen</Pill>
+                            <Pill bg="#fff2d6" fg="#8a5e00">Not checked in</Pill>
                         )}
                     </View>
 
                     {checkedIn ? (
                         <>
                             <View style={styles.timeRow}>
-                                <TimeStat label="Masuk" value={timeOf(today!.check_in_at!)} />
+                                <TimeStat label="In" value={timeOf(today!.check_in_at!)} />
                                 <TimeStat
-                                    label="Keluar"
+                                    label="Out"
                                     value={today!.check_out_at ? timeOf(today!.check_out_at) : '—'}
                                 />
                             </View>
                             <View style={styles.badgeRow}>
                                 {today!.inside_geofence ? (
-                                    <Pill bg="#dff3e8" fg="#137347">Dalam area kantor</Pill>
+                                    <Pill bg="#dff3e8" fg="#137347">In geofence</Pill>
                                 ) : (
-                                    <Pill bg="#fbe6e6" fg="#a83434">Luar area kantor</Pill>
+                                    <Pill bg="#fbe6e6" fg="#a83434">Outside area</Pill>
                                 )}
                                 {today!.distance_m !== null ? (
                                     <Pill bg="#eef2f5" fg={colors.mutedink}>
-                                        {metresLabel(today!.distance_m)} dari kantor
+                                        {metresLabel(today!.distance_m)} from office
                                     </Pill>
                                 ) : null}
                             </View>
                             {today!.check_in_reason ? (
-                                <Text style={styles.reasonNote}>Alasan: {today!.check_in_reason}</Text>
+                                <Text style={styles.reasonNote}>Reason: {today!.check_in_reason}</Text>
                             ) : null}
                         </>
                     ) : (
-                        <Text style={styles.officeSub}>Ambil selfie dan lokasi untuk check-in.</Text>
+                        <Text style={styles.officeSub}>Capture a selfie and location to check in.</Text>
                     )}
                 </Card>
 
@@ -282,25 +295,35 @@ export default function AttendanceScreen() {
                 {!checkedIn ? (
                     <Card style={{ gap: spacing.md }}>
                         {selfie ? (
-                            <Image source={{ uri: selfie.uri }} style={styles.preview} />
-                        ) : null}
+                            <>
+                                <Image source={{ uri: selfie.uri }} style={styles.preview} />
+                                <Text style={styles.coordNote}>Selfie captured</Text>
+                            </>
+                        ) : (
+                            <View style={{ gap: 2 }}>
+                                <Text style={styles.selfieHint}>Take selfie</Text>
+                                <Text style={styles.officeSub}>
+                                    Front camera · required for check-in
+                                </Text>
+                            </View>
+                        )}
 
                         {coords ? (
                             <Text style={styles.coordNote}>
-                                Lokasi terekam
+                                Location captured
                                 {capturedDistance !== null
-                                    ? ` · ${metresLabel(capturedDistance)} dari kantor`
+                                    ? ` · ${metresLabel(capturedDistance)} from office`
                                     : ''}
                             </Text>
                         ) : null}
 
                         {(reasonRequired || likelyOutside) && selfie ? (
                             <View style={{ gap: spacing.xs }}>
-                                <Text style={styles.fieldLabel}>Alasan di luar area</Text>
+                                <Text style={styles.fieldLabel}>Reason for being outside</Text>
                                 <TextInput
                                     value={reason}
                                     onChangeText={setReason}
-                                    placeholder="Mis. kunjungan klien, kerja lapangan"
+                                    placeholder="e.g. client visit, field work"
                                     placeholderTextColor={colors.mutedink}
                                     style={styles.reasonInput}
                                     multiline
@@ -312,19 +335,19 @@ export default function AttendanceScreen() {
 
                         {!selfie ? (
                             <Button
-                                label="Ambil lokasi & selfie"
+                                label="Take selfie"
                                 onPress={prepareCheckIn}
                                 loading={locating}
                             />
                         ) : (
                             <View style={{ gap: spacing.sm }}>
                                 <Button
-                                    label="Check-in sekarang"
+                                    label="Check in"
                                     onPress={submitCheckIn}
                                     loading={submitting}
                                 />
                                 <Button
-                                    label="Ambil ulang"
+                                    label="Retake"
                                     variant="ghost"
                                     onPress={prepareCheckIn}
                                     loading={locating}
@@ -335,14 +358,14 @@ export default function AttendanceScreen() {
                 ) : !checkedOut ? (
                     <Card style={{ gap: spacing.sm }}>
                         {error ? <Text style={styles.error}>{error}</Text> : null}
-                        <Button label="Check-out" onPress={checkOut} loading={submitting} />
+                        <Button label="Check out" onPress={checkOut} loading={submitting} />
                     </Card>
                 ) : null}
 
                 {/* History */}
                 {data?.history && data.history.length > 0 ? (
                     <View style={{ gap: spacing.sm }}>
-                        <Text style={styles.cardLabel}>Riwayat</Text>
+                        <Text style={styles.cardLabel}>History</Text>
                         {data.history.map((row) => (
                             <Card key={row.id} style={styles.historyCard}>
                                 <Text style={styles.historyDate}>{dayOf(row.date)}</Text>
@@ -352,9 +375,9 @@ export default function AttendanceScreen() {
                                     {row.check_out_at ? timeOf(row.check_out_at) : '…'}
                                 </Text>
                                 {row.inside_geofence ? (
-                                    <Pill bg="#dff3e8" fg="#137347">Dalam area</Pill>
+                                    <Pill bg="#dff3e8" fg="#137347">In area</Pill>
                                 ) : (
-                                    <Pill bg="#fbe6e6" fg="#a83434">Luar area</Pill>
+                                    <Pill bg="#fbe6e6" fg="#a83434">Outside</Pill>
                                 )}
                             </Card>
                         ))}
@@ -378,7 +401,9 @@ const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.softbg },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.softbg },
     content: { padding: spacing.lg, gap: spacing.lg },
-    title: { fontSize: 24, fontWeight: '800', color: colors.ink },
+    title: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5, color: colors.ink },
+    subtitle: { fontSize: 13, color: colors.mutedink },
+    selfieHint: { fontSize: 15, fontWeight: '800', color: colors.ink },
     cardLabel: { fontSize: 13, fontWeight: '800', color: colors.mutedink, textTransform: 'uppercase' },
     office: { fontSize: 17, fontWeight: '700', color: colors.ink },
     officeSub: { fontSize: 13, color: colors.mutedink },

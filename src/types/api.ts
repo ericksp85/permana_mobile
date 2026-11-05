@@ -190,10 +190,10 @@ export type CanvassAreaDetail = CanvassArea & { visits: CanvassVisit[] };
 
 /** Canvassing outcomes a user may pick, with local labels and pin colours. */
 export const CANVASS_RESULTS: { value: CanvassResult; label: string; bg: string; fg: string }[] = [
-    { value: 'interested', label: 'Tertarik', bg: '#d6f4f6', fg: '#00737a' },
-    { value: 'competitor', label: 'Pakai kompetitor', bg: '#fdeecd', fg: '#8a5e00' },
-    { value: 'not_now', label: 'Belum sekarang', bg: '#eef2f5', fg: '#5e7180' },
-    { value: 'closed', label: 'Tutup / kosong', bg: '#fbe6e6', fg: '#a83434' },
+    { value: 'interested', label: 'Interested', bg: '#d6f4f6', fg: '#00737a' },
+    { value: 'competitor', label: 'Using competitor', bg: '#fdeecd', fg: '#8a5e00' },
+    { value: 'not_now', label: 'Not now', bg: '#eef2f5', fg: '#5e7180' },
+    { value: 'closed', label: 'Closed / empty', bg: '#fbe6e6', fg: '#a83434' },
 ];
 
 // --- Notifications ----------------------------------------------------------

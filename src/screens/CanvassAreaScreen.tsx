@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { apiFetch, ApiError } from '../api/client';
 import { Button, Card, Pill } from '../components/ui';
-import type { CanvassStackScreenProps } from '../navigation/types';
+import type { MoreStackScreenProps } from '../navigation/types';
 import { colors, radius, spacing } from '../theme';
 import {
     CANVASS_RESULTS,
@@ -34,7 +34,7 @@ function resultStyle(result: CanvassResult): { bg: string; fg: string } {
 }
 
 function whenLabel(iso: string): string {
-    return new Date(iso).toLocaleString('id-ID', {
+    return new Date(iso).toLocaleString('en-US', {
         day: 'numeric',
         month: 'short',
         hour: '2-digit',
@@ -45,7 +45,7 @@ function whenLabel(iso: string): string {
 export default function CanvassAreaScreen({
     route,
     navigation,
-}: CanvassStackScreenProps<'CanvassArea'>) {
+}: MoreStackScreenProps<'CanvassArea'>) {
     const { areaId, name } = route.params;
     const [area, setArea] = useState<CanvassAreaDetail | null>(null);
     const [loading, setLoading] = useState(true);
@@ -71,7 +71,7 @@ export default function CanvassAreaScreen({
             const res = await apiFetch<Single<CanvassAreaDetail>>(`/canvass/${areaId}`);
             setArea(res.data);
         } catch {
-            setError('Gagal memuat area.');
+            setError('Couldn’t load area.');
         } finally {
             setLoading(false);
         }
@@ -86,7 +86,7 @@ export default function CanvassAreaScreen({
         try {
             const perm = await Location.requestForegroundPermissionsAsync();
             if (perm.status !== 'granted') {
-                Alert.alert('Izin lokasi', 'Aktifkan izin lokasi untuk menandai kunjungan.');
+                Alert.alert('Location permission', 'Enable location to log a visit.');
                 return;
             }
             const pos = await Location.getCurrentPositionAsync({
@@ -94,7 +94,7 @@ export default function CanvassAreaScreen({
             });
             setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         } catch {
-            setError('Gagal mengambil lokasi.');
+            setError('Couldn’t get location.');
         } finally {
             setBusy(false);
         }
@@ -105,7 +105,7 @@ export default function CanvassAreaScreen({
         try {
             const perm = await ImagePicker.requestCameraPermissionsAsync();
             if (!perm.granted) {
-                Alert.alert('Izin kamera', 'Aktifkan izin kamera untuk memotret lokasi.');
+                Alert.alert('Camera permission', 'Enable the camera to photograph the location.');
                 return;
             }
             const res = await ImagePicker.launchCameraAsync({
@@ -120,7 +120,7 @@ export default function CanvassAreaScreen({
             const mime = asset.mimeType ?? 'image/jpeg';
             setPhoto({ uri: asset.uri, dataUrl: `data:${mime};base64,${asset.base64}` });
         } catch {
-            setError('Gagal mengambil foto.');
+            setError('Couldn’t take photo.');
         } finally {
             setBusy(false);
         }
@@ -136,7 +136,7 @@ export default function CanvassAreaScreen({
 
     const saveVisit = async () => {
         if (!visitName.trim()) {
-            setError('Nama tempat wajib diisi.');
+            setError('Place name is required.');
             return;
         }
         setSaving(true);
@@ -156,7 +156,7 @@ export default function CanvassAreaScreen({
             resetForm();
             await load();
         } catch (e) {
-            setError(e instanceof ApiError ? e.message : 'Gagal menyimpan kunjungan.');
+            setError(e instanceof ApiError ? e.message : 'Couldn’t save visit.');
         } finally {
             setSaving(false);
         }
@@ -167,10 +167,10 @@ export default function CanvassAreaScreen({
         setError(undefined);
         try {
             await apiFetch(`/canvass/visits/${visit.id}/convert`, { method: 'POST' });
-            Alert.alert('Lead dibuat', `${visit.name} masuk ke pipeline.`);
+            Alert.alert('Lead created', `${visit.name} is now in the pipeline.`);
             await load();
         } catch (e) {
-            setError(e instanceof ApiError ? e.message : 'Gagal membuat lead.');
+            setError(e instanceof ApiError ? e.message : 'Couldn’t create lead.');
         } finally {
             setConvertingId(null);
         }
@@ -187,7 +187,7 @@ export default function CanvassAreaScreen({
     if (!area) {
         return (
             <View style={styles.center}>
-                <Text style={styles.errorText}>{error ?? 'Area tidak ditemukan.'}</Text>
+                <Text style={styles.errorText}>{error ?? 'Area not found.'}</Text>
             </View>
         );
     }
@@ -196,28 +196,29 @@ export default function CanvassAreaScreen({
 
     return (
         <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+            <Text style={styles.sectionTitle}>Area progress</Text>
             <Card style={styles.progressCard}>
                 <View>
                     <Text style={styles.progressNum}>
                         {area.visits.length}
                         <Text style={styles.progressTarget}> / {area.target_units}</Text>
                     </Text>
-                    <Text style={styles.progressLabel}>Kunjungan</Text>
+                    <Text style={styles.progressLabel}>Visits</Text>
                 </View>
                 <View style={styles.progressDivider} />
                 <View>
                     <Text style={[styles.progressNum, { color: colors.tealDark }]}>{interested}</Text>
-                    <Text style={styles.progressLabel}>Tertarik</Text>
+                    <Text style={styles.progressLabel}>Interested</Text>
                 </View>
             </Card>
 
             {/* New visit form */}
             <Card style={{ gap: spacing.md }}>
-                <Text style={styles.sectionTitle}>Kunjungan baru</Text>
+                <Text style={styles.sectionTitle}>New visit</Text>
                 <TextInput
                     value={visitName}
                     onChangeText={setVisitName}
-                    placeholder="Nama tempat / usaha"
+                    placeholder="Place / business name"
                     placeholderTextColor={colors.mutedink}
                     style={styles.input}
                 />
@@ -240,7 +241,7 @@ export default function CanvassAreaScreen({
                 <TextInput
                     value={note}
                     onChangeText={setNote}
-                    placeholder="Catatan (opsional)"
+                    placeholder="Note (optional)"
                     placeholderTextColor={colors.mutedink}
                     style={[styles.input, styles.noteInput]}
                     multiline
@@ -259,7 +260,7 @@ export default function CanvassAreaScreen({
                             size={18}
                             color={coords ? colors.success : colors.navy}
                         />
-                        <Text style={styles.captureText}>{coords ? 'Lokasi ✓' : 'Lokasi'}</Text>
+                        <Text style={styles.captureText}>{coords ? 'Location ✓' : 'Location'}</Text>
                     </Pressable>
                     <Pressable
                         onPress={takePhoto}
@@ -271,19 +272,19 @@ export default function CanvassAreaScreen({
                             size={18}
                             color={photo ? colors.success : colors.navy}
                         />
-                        <Text style={styles.captureText}>{photo ? 'Foto ✓' : 'Foto'}</Text>
+                        <Text style={styles.captureText}>{photo ? 'Photo ✓' : 'Photo'}</Text>
                     </Pressable>
                 </View>
 
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-                <Button label="Simpan kunjungan" onPress={saveVisit} loading={saving} />
+                <Button label="Log visit at my location" onPress={saveVisit} loading={saving} />
             </Card>
 
             {/* Visit list */}
-            <Text style={styles.sectionTitle}>Riwayat kunjungan</Text>
+            <Text style={styles.sectionTitle}>Visits</Text>
             {area.visits.length === 0 ? (
-                <Text style={styles.empty}>Belum ada kunjungan di area ini.</Text>
+                <Text style={styles.empty}>No visits in this area yet.</Text>
             ) : (
                 area.visits.map((v) => {
                     const rs = resultStyle(v.result);
@@ -304,7 +305,7 @@ export default function CanvassAreaScreen({
                                 {v.has_photo ? (
                                     <View style={styles.metaIcon}>
                                         <Ionicons name="image-outline" size={14} color={colors.mutedink} />
-                                        <Text style={styles.visitMeta}>Foto</Text>
+                                        <Text style={styles.visitMeta}>Photo</Text>
                                     </View>
                                 ) : null}
                                 {v.lat !== null ? (
@@ -315,10 +316,10 @@ export default function CanvassAreaScreen({
                                 ) : null}
                             </View>
                             {v.lead_id !== null ? (
-                                <Pill bg="#e8eff4" fg="#2c5d78">Sudah jadi lead</Pill>
+                                <Pill bg="#e8eff4" fg="#2c5d78">Converted to lead</Pill>
                             ) : canConvert ? (
                                 <Button
-                                    label="Jadikan lead"
+                                    label="Convert to lead"
                                     variant="ghost"
                                     loading={convertingId === v.id}
                                     onPress={() => convert(v)}

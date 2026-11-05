@@ -1,20 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import CanvassStack from './CanvassStack';
 import HomeStack from './HomeStack';
+import MoreStack from './MoreStack';
 import PipelineStack from './PipelineStack';
-import AttendanceScreen from '../screens/AttendanceScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';
 import { colors } from '../theme';
 
 const Tab = createBottomTabNavigator();
 
 const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
-    Beranda: 'home',
+    Home: 'home',
     Pipeline: 'git-branch',
-    Jadwal: 'calendar',
-    Absensi: 'finger-print',
-    Canvass: 'map',
+    Schedule: 'calendar',
+    More: 'ellipsis-horizontal-circle',
 };
 
 export default function TabNavigator() {
@@ -31,11 +29,10 @@ export default function TabNavigator() {
                 ),
             })}
         >
-            <Tab.Screen name="Beranda" component={HomeStack} />
+            <Tab.Screen name="Home" component={HomeStack} />
             <Tab.Screen name="Pipeline" component={PipelineStack} />
-            <Tab.Screen name="Jadwal" component={ScheduleScreen} />
-            <Tab.Screen name="Absensi" component={AttendanceScreen} />
-            <Tab.Screen name="Canvass" component={CanvassStack} />
+            <Tab.Screen name="Schedule" component={ScheduleScreen} />
+            <Tab.Screen name="More" component={MoreStack} />
         </Tab.Navigator>
     );
 }

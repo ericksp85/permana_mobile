@@ -96,8 +96,8 @@ export default function ReportsScreen() {
         <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
             <Toggle
                 options={[
-                    { value: 'monthly', label: 'Bulanan' },
-                    { value: 'weekly', label: 'Mingguan' },
+                    { value: 'monthly', label: 'Monthly' },
+                    { value: 'weekly', label: 'Weekly' },
                 ]}
                 value={period}
                 onChange={setPeriod}
@@ -107,9 +107,9 @@ export default function ReportsScreen() {
                 <>
                     <View style={styles.kpiGrid}>
                         <Kpi label="Won MRC" value={rupiahShort(report.kpis.won_mrc)} accent />
-                        <Kpi label="Pelanggan baru" value={String(report.kpis.new_customers)} />
-                        <Kpi label="Pipeline masuk" value={rupiahShort(report.kpis.pipeline_added)} />
-                        <Kpi label="Aktivitas" value={String(report.kpis.activities)} />
+                        <Kpi label="New customers" value={String(report.kpis.new_customers)} />
+                        <Kpi label="Pipeline added" value={rupiahShort(report.kpis.pipeline_added)} />
+                        <Kpi label="Activities" value={String(report.kpis.activities)} />
                     </View>
 
                     <Card style={{ gap: spacing.md }}>
@@ -135,7 +135,7 @@ export default function ReportsScreen() {
                     </Card>
 
                     <Card style={{ gap: spacing.sm }}>
-                        <Text style={styles.cardTitle}>Funnel prospek</Text>
+                        <Text style={styles.cardTitle}>Prospect funnel · this month</Text>
                         {report.funnel.map((f) => (
                             <View key={f.key} style={styles.funnelRow}>
                                 <Text style={styles.funnelLabel}>{f.label}</Text>
@@ -155,11 +155,11 @@ export default function ReportsScreen() {
             ) : null}
 
             <View style={styles.boardHeader}>
-                <Text style={styles.cardTitle}>Peringkat {board ? `· ${board.month}` : ''}</Text>
+                <Text style={styles.cardTitle}>Leaderboard {board ? `· ${board.month}` : ''}</Text>
                 <Toggle
                     options={[
-                        { value: 'team', label: 'Tim' },
-                        { value: 'all', label: 'Semua' },
+                        { value: 'team', label: 'Team' },
+                        { value: 'all', label: 'All' },
                     ]}
                     value={scope}
                     onChange={setScope}
@@ -168,7 +168,7 @@ export default function ReportsScreen() {
             {board && board.rows.length > 0 ? (
                 board.rows.map((row, i) => <BoardRow key={row.user_id} row={row} rank={i + 1} />)
             ) : (
-                <Text style={styles.empty}>Belum ada data peringkat.</Text>
+                <Text style={styles.empty}>No leaderboard data yet.</Text>
             )}
         </ScrollView>
     );
@@ -195,7 +195,7 @@ function BoardRow({ row, rank }: { row: LeaderboardRow; rank: number }) {
             </View>
             <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.boardMrc}>{rupiahShort(row.won_mrc)}</Text>
-                <Text style={styles.boardDeals}>{row.deals} deal</Text>
+                <Text style={styles.boardDeals}>{row.deals} deals</Text>
             </View>
         </Card>
     );

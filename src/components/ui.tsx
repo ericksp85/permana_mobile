@@ -10,6 +10,7 @@ import {
     type TextInputProps,
     type ViewStyle,
 } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 import { colors, radius, spacing, stageColors } from '../theme';
 
 export function Card({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
@@ -87,6 +88,51 @@ export function StagePill({ stage, label }: { stage: string; label: string }) {
     );
 }
 
+/**
+ * Target progress donut — mirrors the conic ring in the design's home header.
+ * Renders a teal arc over a track, with the percentage centered.
+ */
+export function ProgressRing({
+    pct,
+    size = 92,
+    stroke = 11,
+    track = 'rgba(255,255,255,0.22)',
+    fill = colors.teal,
+    label,
+}: {
+    pct: number;
+    size?: number;
+    stroke?: number;
+    track?: string;
+    fill?: string;
+    label?: string;
+}) {
+    const clamped = Math.max(0, Math.min(100, pct));
+    const r = (size - stroke) / 2;
+    const circ = 2 * Math.PI * r;
+    const offset = circ * (1 - clamped / 100);
+    return (
+        <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+            <Svg width={size} height={size} style={{ position: 'absolute', transform: [{ rotate: '-90deg' }] }}>
+                <Circle cx={size / 2} cy={size / 2} r={r} stroke={track} strokeWidth={stroke} fill="none" />
+                <Circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={r}
+                    stroke={fill}
+                    strokeWidth={stroke}
+                    strokeDasharray={circ}
+                    strokeDashoffset={offset}
+                    strokeLinecap="round"
+                    fill="none"
+                />
+            </Svg>
+            <Text style={styles.ringPct}>{clamped}%</Text>
+            {label ? <Text style={styles.ringLabel}>{label}</Text> : null}
+        </View>
+    );
+}
+
 /** Format integer Rupiah as a compact "Rp 18.5jt" summary string. */
 export function rupiahShort(value: number | null | undefined): string {
     if (!value) return 'Rp 0';
@@ -145,4 +191,6 @@ const styles = StyleSheet.create({
         paddingVertical: 3,
     },
     pillText: { fontSize: 12, fontWeight: '700' },
+    ringPct: { fontSize: 22, fontWeight: '800', color: colors.white },
+    ringLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.8)' },
 });

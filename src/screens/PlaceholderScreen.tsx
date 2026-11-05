@@ -8,7 +8,7 @@ export default function PlaceholderScreen({ title }: { title: string }) {
         <SafeAreaView style={styles.safe} edges={['top']}>
             <View style={styles.center}>
                 <Text style={styles.title}>{title}</Text>
-                <Text style={styles.note}>Segera hadir di versi berikutnya.</Text>
+                <Text style={styles.note}>Coming in a later version.</Text>
             </View>
         </SafeAreaView>
     );

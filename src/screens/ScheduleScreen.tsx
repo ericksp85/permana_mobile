@@ -19,8 +19,8 @@ function dateKey(iso: string): string {
 
 function sectionTitle(key: string): string {
     const today = new Date().toISOString().slice(0, 10);
-    if (key === today) return 'Hari ini';
-    return new Date(key + 'T00:00:00').toLocaleDateString('id-ID', {
+    if (key === today) return 'Today';
+    return new Date(key + 'T00:00:00').toLocaleDateString('en-US', {
         weekday: 'short',
         day: 'numeric',
         month: 'short',
@@ -28,7 +28,17 @@ function sectionTitle(key: string): string {
 }
 
 function timeOf(iso: string): string {
-    return new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+
+/** "November 2026 · Week 45" — matches the design's schedule subtitle. */
+function monthWeekLabel(): string {
+    const now = new Date();
+    const month = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const start = new Date(Date.UTC(now.getFullYear(), 0, 1));
+    const day = Math.floor((now.getTime() - start.getTime()) / 86400000);
+    const week = Math.ceil((day + start.getUTCDay() + 1) / 7);
+    return `${month} · Week ${week}`;
 }
 
 export default function ScheduleScreen() {
@@ -47,7 +57,7 @@ export default function ScheduleScreen() {
             });
             setEvents(res.data);
         } catch {
-            setError('Gagal memuat jadwal.');
+            setError('Couldn’t load schedule.');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -64,7 +74,7 @@ export default function ScheduleScreen() {
             await apiFetch(`/events/${event.id}/done`, { method: 'POST' });
             await load();
         } catch (e) {
-            setError(e instanceof ApiError ? e.message : 'Gagal menandai selesai.');
+            setError(e instanceof ApiError ? e.message : 'Couldn’t mark as done.');
         } finally {
             setBusyId(null);
         }
@@ -94,8 +104,8 @@ export default function ScheduleScreen() {
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <View style={styles.header}>
-                <Text style={styles.title}>Jadwal</Text>
-                <Text style={styles.count}>{events.length} agenda</Text>
+                <Text style={styles.title}>Schedule</Text>
+                <Text style={styles.subtitle}>{monthWeekLabel()}</Text>
             </View>
             <SectionList
                 sections={sections}
@@ -116,7 +126,14 @@ export default function ScheduleScreen() {
                     <Text style={styles.sectionHeader}>{section.title}</Text>
                 )}
                 ListEmptyComponent={
-                    <Text style={styles.empty}>{error ?? 'Tidak ada agenda mendatang.'}</Text>
+                    error ? (
+                        <Text style={styles.empty}>{error}</Text>
+                    ) : (
+                        <View style={styles.emptyWrap}>
+                            <Text style={styles.emptyTitle}>Free day</Text>
+                            <Text style={styles.empty}>Plan a canvassing route or book a meeting.</Text>
+                        </View>
+                    )
                 }
                 renderItem={({ item }) => {
                     const done = item.status === 'done';
@@ -126,7 +143,7 @@ export default function ScheduleScreen() {
                                 <Text style={styles.time}>{timeOf(item.starts_at)}</Text>
                                 {done ? (
                                     <Pill bg="#dff3e8" fg="#137347">
-                                        Selesai
+                                        Done
                                     </Pill>
                                 ) : (
                                     <Pill bg="#e8eff4" fg="#2c5d78">
@@ -140,7 +157,7 @@ export default function ScheduleScreen() {
                             ) : null}
                             {!done ? (
                                 <Button
-                                    label="Tandai selesai"
+                                    label="Mark done"
                                     variant="ghost"
                                     loading={busyId === item.id}
                                     onPress={() => markDone(item)}
@@ -158,15 +175,13 @@ const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.softbg },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.softbg },
     header: {
-        flexDirection: 'row',
-        alignItems: 'baseline',
-        justifyContent: 'space-between',
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.sm,
         paddingBottom: spacing.md,
+        gap: 2,
     },
-    title: { fontSize: 24, fontWeight: '800', color: colors.ink },
-    count: { fontSize: 13, fontWeight: '700', color: colors.mutedink },
+    title: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5, color: colors.ink },
+    subtitle: { fontSize: 13, color: colors.mutedink },
     list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, gap: spacing.md },
     sectionHeader: {
         fontSize: 13,
@@ -181,5 +196,7 @@ const styles = StyleSheet.create({
     time: { fontSize: 16, fontWeight: '800', color: colors.ink },
     eventTitle: { fontSize: 15, fontWeight: '600', color: colors.ink },
     location: { fontSize: 13, color: colors.mutedink },
-    empty: { textAlign: 'center', color: colors.mutedink, paddingVertical: spacing.xl * 2 },
+    emptyWrap: { alignItems: 'center', paddingVertical: spacing.xl * 2, gap: spacing.xs },
+    emptyTitle: { fontSize: 15, fontWeight: '800', color: colors.ink },
+    empty: { textAlign: 'center', color: colors.mutedink },
 });
