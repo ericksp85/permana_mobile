@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL, API_EXTRA_HEADERS } from '../config';
 
 /**
  * A failed API call. `errors` carries Laravel's field validation bag when
@@ -54,6 +54,7 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
 
     const headers: Record<string, string> = {
         Accept: 'application/json',
+        ...API_EXTRA_HEADERS,
     };
     if (options.body !== undefined) headers['Content-Type'] = 'application/json';
     if (authToken) headers.Authorization = `Bearer ${authToken}`;

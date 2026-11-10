@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiFetch } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import { canCanvass } from '../auth/roles';
 import { Card, ProgressRing, StagePill, rupiahShort } from '../components/ui';
 import type { HomeStackScreenProps } from '../navigation/types';
 import SyncBanner from '../offline/SyncBanner';
@@ -100,7 +101,9 @@ export default function HomeScreen({ navigation }: HomeStackScreenProps<'HomeMai
         { label: 'New lead', icon: 'add-outline', bg: '#ddf5f6', fg: '#00737a', onPress: () => parent?.navigate('Pipeline') },
         { label: 'Log activity', icon: 'create-outline', bg: '#e9edfb', fg: '#3a52a8', onPress: () => parent?.navigate('Pipeline') },
         { label: 'Check-in', icon: 'finger-print-outline', bg: '#dff3e8', fg: '#137347', onPress: () => parent?.navigate('More', { screen: 'Attendance' }) },
-        { label: 'Canvass', icon: 'map-outline', bg: '#fff2d6', fg: '#8a5e00', onPress: () => parent?.navigate('More', { screen: 'CanvassList' }) },
+        ...(canCanvass(user)
+            ? [{ label: 'Canvass', icon: 'map-outline' as const, bg: '#fff2d6', fg: '#8a5e00', onPress: () => parent?.navigate('More', { screen: 'CanvassList' }) }]
+            : []),
     ];
 
     return (
@@ -178,7 +181,9 @@ export default function HomeScreen({ navigation }: HomeStackScreenProps<'HomeMai
                         <>
                             <Text style={styles.emptyTitle}>Free day</Text>
                             <Text style={styles.emptySub}>
-                                Plan a canvassing route or book a meeting.
+                                {canCanvass(user)
+                                    ? 'Plan a canvassing route or book a meeting.'
+                                    : 'Nothing scheduled today.'}
                             </Text>
                         </>
                     ) : (

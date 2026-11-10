@@ -20,7 +20,6 @@
     },
     "android": {
       "package": "id.permana.sales",
-      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#034A6B",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -46,7 +45,16 @@
           "cameraPermission": "Selfie photos for attendance check-in and canvassing photos."
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-build-properties",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ]
   }
 }

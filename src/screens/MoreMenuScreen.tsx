@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiFetch } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import { canCanvass } from '../auth/roles';
 import { Card } from '../components/ui';
 import type { MoreStackParamList, MoreStackScreenProps } from '../navigation/types';
 import { colors, radius, spacing } from '../theme';
@@ -54,7 +55,9 @@ export default function MoreMenuScreen({ navigation }: MoreStackScreenProps<'Mor
             route: 'Notifications',
         },
         { label: 'Attendance', sub: 'Check-in & history', icon: 'finger-print-outline', route: 'Attendance' },
-        { label: 'Canvassing', sub: 'Areas & visits', icon: 'map-outline', route: 'CanvassList' },
+        ...(canCanvass(user)
+            ? [{ label: 'Canvassing', sub: 'Areas & visits', icon: 'map-outline' as const, route: 'CanvassList' as const }]
+            : []),
         { label: 'Quotations', sub: 'Status & approvals', icon: 'document-text-outline', route: 'Quotations' },
         {
             label: 'Targets & reports',
