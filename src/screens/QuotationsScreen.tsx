@@ -78,7 +78,7 @@ export default function QuotationsScreen() {
     return (
         <View style={styles.screen}>
             <View style={styles.filterBar}>
-                <FlatList
+                <FlatList showsVerticalScrollIndicator={false}
                     horizontal
                     data={FILTERS}
                     keyExtractor={(f) => f.value}
@@ -101,7 +101,7 @@ export default function QuotationsScreen() {
                     }}
                 />
             </View>
-            <FlatList
+            <FlatList showsVerticalScrollIndicator={false}
                 data={items}
                 keyExtractor={(q) => String(q.id)}
                 contentContainerStyle={styles.list}

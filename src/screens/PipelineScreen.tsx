@@ -84,7 +84,7 @@ export default function PipelineScreen({
                     returnKeyType="search"
                 />
             </View>
-            <FlatList
+            <FlatList showsVerticalScrollIndicator={false}
                 data={filtered}
                 keyExtractor={(item) => String(item.id)}
                 contentContainerStyle={styles.list}

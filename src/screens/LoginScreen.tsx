@@ -44,7 +44,7 @@ export default function LoginScreen() {
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 style={{ flex: 1 }}
             >
-                <ScrollView
+                <ScrollView showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.container}
                     keyboardShouldPersistTaps="handled"
                 >

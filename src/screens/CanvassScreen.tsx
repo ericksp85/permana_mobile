@@ -58,7 +58,7 @@ export default function CanvassScreen({ navigation }: MoreStackScreenProps<'Canv
                 <Text style={styles.title}>Canvassing</Text>
                 <Text style={styles.count}>{areas.length} areas</Text>
             </View>
-            <FlatList
+            <FlatList showsVerticalScrollIndicator={false}
                 data={areas}
                 keyExtractor={(item) => String(item.id)}
                 contentContainerStyle={styles.list}

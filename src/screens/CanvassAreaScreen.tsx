@@ -215,7 +215,7 @@ export default function CanvassAreaScreen({
     const interested = area.visits.filter((v) => v.result === 'interested').length;
 
     return (
-        <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+        <ScrollView showsVerticalScrollIndicator={false} style={styles.screen} contentContainerStyle={styles.content}>
             <SyncBanner />
             <Text style={styles.sectionTitle}>Area progress</Text>
             <Card style={styles.progressCard}>

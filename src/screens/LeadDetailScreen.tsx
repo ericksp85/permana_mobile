@@ -148,7 +148,7 @@ export default function LeadDetailScreen({
     const canManageQuote = user?.id === lead.owner_id;
 
     return (
-        <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+        <ScrollView showsVerticalScrollIndicator={false} style={styles.screen} contentContainerStyle={styles.content}>
             <SyncBanner />
             <Card style={{ gap: spacing.sm }}>
                 <View style={styles.rowBetween}>

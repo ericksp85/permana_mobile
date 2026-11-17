@@ -76,7 +76,7 @@ export default function MoreMenuScreen({ navigation }: MoreStackScreenProps<'Mor
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
-            <ScrollView contentContainerStyle={styles.container}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
                 <Text style={styles.title}>More</Text>
 
                 <View style={styles.profile}>

@@ -54,7 +54,7 @@ export default function TargetsScreen() {
     }
 
     return (
-        <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+        <ScrollView showsVerticalScrollIndicator={false} style={styles.screen} contentContainerStyle={styles.content}>
             {data.me ? (
                 <Card style={{ gap: spacing.md }}>
                     <Text style={styles.cardTitle}>My target · this month</Text>

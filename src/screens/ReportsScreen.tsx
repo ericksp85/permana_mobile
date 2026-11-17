@@ -95,7 +95,7 @@ export default function ReportsScreen() {
     const maxFunnel = report ? Math.max(1, ...report.funnel.map((f) => f.value)) : 1;
 
     return (
-        <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+        <ScrollView showsVerticalScrollIndicator={false} style={styles.screen} contentContainerStyle={styles.content}>
             <Toggle
                 options={[
                     { value: 'monthly', label: 'Monthly' },

@@ -108,7 +108,7 @@ export default function HomeScreen({ navigation }: HomeStackScreenProps<'HomeMai
 
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
-            <ScrollView contentContainerStyle={styles.container}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
                 {/* Navy header with greeting, notifications and the target donut */}
                 <View style={styles.hero}>
                     <View style={styles.heroTop}>

@@ -241,7 +241,7 @@ export default function AttendanceScreen() {
 
     return (
         <SafeAreaView style={styles.safe} edges={[]}>
-            <ScrollView
+            <ScrollView showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.content}
                 refreshControl={
                     <RefreshControl

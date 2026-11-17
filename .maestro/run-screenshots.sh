@@ -10,7 +10,7 @@ ADB="$HOME/Library/Android/sdk/platform-tools/adb"
 if [[ "$DEVICE" == emulator-* ]]; then
   "$ADB" -s "$DEVICE" shell settings put global sysui_demo_allowed 1
   for c in "-e command enter" "-e command clock -e hhmm 0941" "-e command battery -e level 100 -e plugged false" \
-           "-e command network -e wifi show -e level 4 -e mobile show -e datatype none -e level 4" "-e command notifications -e visible false"; do
+           "-e command network -e wifi show -e level 4 -e fully true" "-e command network -e mobile hide" "-e command notifications -e visible false"; do
     "$ADB" -s "$DEVICE" shell am broadcast -a com.android.systemui.demo $c >/dev/null
   done
 fi

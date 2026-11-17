@@ -37,7 +37,7 @@ export default function ProductsScreen() {
     }
 
     return (
-        <FlatList
+        <FlatList showsVerticalScrollIndicator={false}
             style={styles.screen}
             data={items}
             keyExtractor={(p) => String(p.id)}

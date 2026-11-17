@@ -89,7 +89,7 @@ export default function NotificationsScreen() {
                     </Pressable>
                 </View>
             ) : null}
-            <FlatList
+            <FlatList showsVerticalScrollIndicator={false}
                 data={items}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.list}
