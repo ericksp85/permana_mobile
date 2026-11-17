@@ -1,0 +1,62 @@
+# Android variant of store-screenshots.yaml (hardware back instead of edge swipe).
+# Run:  set -a; source .maestro/.env.local; set +a
+#       maestro test -e PERMANA_EMAIL="$PERMANA_EMAIL" -e PERMANA_PASSWORD="$PERMANA_PASSWORD" \
+#         -e OUT=store-assets/ios-iphone .maestro/store-screenshots.yaml
+appId: id.permana.sales
+---
+- launchApp:
+    clearState: true
+# iOS Keychain survives clearState, so sign out if a previous run left a session.
+- runFlow:
+    when:
+      visible: "More"
+    commands:
+      - tapOn: "More"
+      - tapOn: ".*Sign out.*"
+      - waitForAnimationToEnd
+- tapOn: "name@permana.net.id"
+- waitForAnimationToEnd
+- inputText: ${PERMANA_EMAIL}
+- back
+- waitForAnimationToEnd
+- tapOn:
+    text: "Password"
+    index: 1
+- waitForAnimationToEnd
+- inputText: ${PERMANA_PASSWORD}
+- back
+- waitForAnimationToEnd
+- tapOn: "Sign in"
+- extendedWaitUntil:
+    visible: "Pipeline"
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/01-home
+
+- tapOn: "Pipeline"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/02-pipeline
+
+- tapOn: "Schedule"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/03-schedule
+
+- tapOn: "More"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/04-more
+
+- tapOn: ".*Quotations.*"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/05-quotations
+- back
+- waitForAnimationToEnd
+
+- tapOn: ".*Targets & reports.*"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/06-reports
+- back
+- waitForAnimationToEnd
+
+- tapOn: ".*Products.*"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/07-products
