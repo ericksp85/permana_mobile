@@ -11,9 +11,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "id.permana.sales",
       "infoPlist": {
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
-        },
         "NSCameraUsageDescription": "Selfie photos for attendance check-in and canvassing photos.",
         "NSLocationWhenInUseUsageDescription": "Tags your location for check-in and field visits."
       }
@@ -46,15 +43,10 @@
         }
       ],
       "expo-font",
-      "expo-status-bar",
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "usesCleartextTraffic": true
-          }
-        }
-      ]
-    ]
+      "expo-status-bar"
+    ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }

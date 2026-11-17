@@ -85,3 +85,21 @@ eas submit --profile production --platform ios    # unggah ke App Store Connect
 - **M3 ✅** Canvassing + foto.
 - **M4 ✅** Quotation, target, laporan, notifikasi.
 - **M5 ✅** Antrean offline + persiapan build rilis (profil EAS).
+
+## Test
+
+```bash
+npm test          # jest-expo: apiFetch + antrean offline/sync
+npx tsc --noEmit && npx expo lint
+```
+
+## Konfigurasi build & OTA update
+
+- `app.config.ts` melapisi `app.json`: izin HTTP polos (ATS iOS / cleartext Android)
+  **hanya** aktif untuk build lokal dan profil `development`; `preview` dan
+  `production` bersih (HTTPS saja).
+- `expo-updates` terpasang dengan `runtimeVersion` policy `appVersion`. Agar OTA
+  aktif, hubungkan proyek ke EAS sekali: `npx eas-cli@latest init` lalu
+  `npx eas-cli@latest update:configure`. Kirim update: `eas update --channel production`.
+- Error tak terduga dilaporkan lewat `src/monitoring.ts` (saat ini hanya log) dan
+  ditangkap `ErrorBoundary`. Untuk crash reporting, sambungkan Sentry di `reportError`.

@@ -3,6 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import ErrorBoundary from './src/components/ErrorBoundary';
+import { installGlobalErrorHandler } from './src/monitoring';
 import { AuthProvider } from './src/auth/AuthContext';
 import { installJakartaFont, jakartaFontMap } from './src/fonts';
 import RootNavigator from './src/navigation/RootNavigator';
@@ -11,6 +13,7 @@ import { colors } from './src/theme';
 
 // Map fontWeight → Jakarta family globally before any Text renders.
 installJakartaFont();
+installGlobalErrorHandler();
 
 export default function App() {
     const [fontsLoaded] = useFonts(jakartaFontMap);
@@ -24,6 +27,7 @@ export default function App() {
     }
 
     return (
+        <ErrorBoundary>
         <SafeAreaProvider>
             <OfflineProvider>
                 <AuthProvider>
@@ -34,5 +38,6 @@ export default function App() {
                 </AuthProvider>
             </OfflineProvider>
         </SafeAreaProvider>
+        </ErrorBoundary>
     );
 }
