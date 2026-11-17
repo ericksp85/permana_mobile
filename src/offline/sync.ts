@@ -1,15 +1,13 @@
-import { ApiError, apiFetch } from '../api/client';
-import { enqueue, getOutbox, removeFromOutbox, type OutboxKind } from './outbox';
+import { Alert } from 'react-native';
+import { ApiError, apiFetch, hasAuthToken, isTransientError } from '../api/client';
+import { enqueue, getOutbox, loadOutbox, removeFromOutbox, type OutboxKind } from './outbox';
 
 /**
- * A network failure (device offline / server unreachable) throws a plain
- * Error from fetch, never an ApiError. We treat only those as "queue it";
- * an ApiError means the server answered and rejected the request, so retrying
- * the same payload would fail again.
+ * Queue only when a retry can succeed: no connectivity, or a temporary server
+ * condition. A definitive ApiError (validation / business rule) means the same
+ * payload would fail again, so it propagates to the caller instead.
  */
-function isConnectivityError(e: unknown): boolean {
-    return !(e instanceof ApiError);
-}
+const isConnectivityError = isTransientError;
 
 export type QueueResult<T> = { queued: true } | { queued: false; data: T };
 
@@ -40,20 +38,39 @@ export async function submitOrQueue<T>(
     }
 }
 
+/** A 4xx the server will keep returning for this payload (not auth/rate-limit/timeout). */
+function isDefinitiveRejection(e: unknown): e is ApiError {
+    return (
+        e instanceof ApiError &&
+        e.status >= 400 &&
+        e.status < 500 &&
+        ![401, 408, 429].includes(e.status)
+    );
+}
+
 let flushing = false;
 
 export type FlushResult = { sent: number; dropped: number; remaining: number };
 
+/** Labels of items the server definitively rejected during the last flush. */
+export type DroppedItem = { label: string; message: string };
+
 /**
- * Flush the outbox oldest-first. Stops at the first connectivity error (still
- * offline) and leaves the rest queued. Drops items the server rejects with an
- * ApiError, since re-sending the same payload cannot succeed.
+ * Flush the outbox oldest-first. Stops at the first transient failure (offline,
+ * 5xx, expired session) and leaves the rest queued. Drops only items the server
+ * definitively rejects with a 4xx (validation / business rules), since re-sending the same
+ * payload cannot succeed.
  */
-export async function flushOutbox(): Promise<FlushResult> {
-    if (flushing) return { sent: 0, dropped: 0, remaining: getOutbox().length };
+export async function flushOutbox(): Promise<FlushResult & { droppedItems: DroppedItem[] }> {
+    const idle = { sent: 0, dropped: 0, remaining: getOutbox().length, droppedItems: [] };
+    // Nothing to send under, or already running. Without a session a flush
+    // would just 401, so wait until the user is signed in.
+    if (flushing || !hasAuthToken()) return idle;
+    await loadOutbox(); // make sure persisted items are in memory (no-op once loaded)
     flushing = true;
     let sent = 0;
     let dropped = 0;
+    const droppedItems: DroppedItem[] = [];
     try {
         // Snapshot ids in order; the queue may change under us between awaits.
         for (const item of [...getOutbox()]) {
@@ -62,18 +79,31 @@ export async function flushOutbox(): Promise<FlushResult> {
                 await removeFromOutbox(item.id);
                 sent += 1;
             } catch (e) {
-                if (e instanceof ApiError) {
-                    // Server reached but rejected — drop so the queue can drain.
+                if (isDefinitiveRejection(e)) {
+                    // Server reached and definitively rejected — drop so the
+                    // queue can drain, and report it so the user isn't left guessing.
                     await removeFromOutbox(item.id);
                     dropped += 1;
+                    droppedItems.push({ label: item.label, message: e.firstError() ?? e.message });
                     continue;
                 }
-                // Connectivity gone again — stop and keep the rest.
+                // Offline, temporary server trouble or an expired session (401):
+                // stop and keep everything queued for the next attempt.
                 break;
             }
         }
     } finally {
         flushing = false;
     }
-    return { sent, dropped, remaining: getOutbox().length };
+    return { sent, dropped, remaining: getOutbox().length, droppedItems };
+}
+
+/** Flush the queue and tell the user about anything the server rejected. */
+export async function flushAndReport(): Promise<void> {
+    const { droppedItems } = await flushOutbox();
+    if (droppedItems.length === 0) return;
+    Alert.alert(
+        'Some items couldn’t be synced',
+        droppedItems.map((d) => `• ${d.label}: ${d.message}`).join('\n'),
+    );
 }

@@ -23,7 +23,42 @@ export class ApiError extends Error {
     }
 }
 
+/**
+ * The request never got a usable answer: device offline, server unreachable or
+ * the request timed out. Safe to retry later, unlike an ApiError.
+ */
+export class NetworkError extends Error {
+    constructor(message = 'Network request failed') {
+        super(message);
+        this.name = 'NetworkError';
+    }
+}
+
+/**
+ * True when retrying the same request later may succeed: no connectivity, or a
+ * temporary server condition (timeout, rate limit, gateway errors). Validation
+ * and business-rule rejections (4xx) are NOT transient.
+ */
+export function isTransientError(e: unknown): boolean {
+    if (e instanceof NetworkError) return true;
+    return e instanceof ApiError && [408, 429, 502, 503, 504].includes(e.status);
+}
+
+/** How long to wait for the server before giving up. */
+const REQUEST_TIMEOUT_MS = 20_000;
+
 let authToken: string | null = null;
+let unauthorizedHandler: (() => void) | null = null;
+
+/** Register a callback fired when an authenticated request gets a 401. */
+export function setUnauthorizedHandler(fn: (() => void) | null): void {
+    unauthorizedHandler = fn;
+}
+
+/** Whether a bearer token is currently set. */
+export function hasAuthToken(): boolean {
+    return authToken !== null;
+}
 
 /** Set (or clear) the bearer token sent with every request. */
 export function setAuthToken(token: string | null): void {
@@ -59,14 +94,39 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
     if (options.body !== undefined) headers['Content-Type'] = 'application/json';
     if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
-    const response = await fetch(url, {
-        method: options.method ?? 'GET',
-        headers,
-        body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-    const text = await response.text();
-    const data = text ? JSON.parse(text) : null;
+    let response: Response;
+    let text: string;
+    try {
+        response = await fetch(url, {
+            method: options.method ?? 'GET',
+            headers,
+            body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+            signal: controller.signal,
+        });
+        text = await response.text();
+    } catch (e) {
+        throw new NetworkError(
+            controller.signal.aborted ? 'The request timed out' : e instanceof Error ? e.message : undefined,
+        );
+    } finally {
+        clearTimeout(timer);
+    }
+
+    // Error pages (502, maintenance) come back as HTML — don't let a JSON parse
+    // failure masquerade as a connectivity problem.
+    let data: any = null;
+    try {
+        data = text ? JSON.parse(text) : null;
+    } catch {
+        data = null;
+    }
+
+    if (response.status === 401 && authToken) {
+        unauthorizedHandler?.();
+    }
 
     if (!response.ok) {
         throw new ApiError(
@@ -74,6 +134,10 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
             data?.message ?? `Request failed (${response.status})`,
             data?.errors,
         );
+    }
+
+    if (text && data === null) {
+        throw new ApiError(response.status, 'Unexpected response from the server.');
     }
 
     return data as T;

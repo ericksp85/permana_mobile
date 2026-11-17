@@ -11,7 +11,7 @@ import {
 } from 'react';
 import { AppState } from 'react-native';
 import { loadOutbox, subscribeOutbox } from './outbox';
-import { flushOutbox } from './sync';
+import { flushAndReport } from './sync';
 
 type OfflineValue = {
     /** Best-known connectivity; optimistic (true) until NetInfo says otherwise. */
@@ -31,7 +31,7 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
 
     const sync = useCallback(() => {
         if (!onlineRef.current) return;
-        void flushOutbox();
+        void flushAndReport();
     }, []);
 
     useEffect(() => {
@@ -44,11 +44,11 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
             const was = onlineRef.current;
             onlineRef.current = next;
             setOnline(next);
-            if (next && !was) void flushOutbox(); // just came back online
+            if (next && !was) void flushAndReport(); // just came back online
         });
 
         const appSub = AppState.addEventListener('change', (s) => {
-            if (s === 'active' && onlineRef.current) void flushOutbox();
+            if (s === 'active' && onlineRef.current) void flushAndReport();
         });
 
         return () => {
