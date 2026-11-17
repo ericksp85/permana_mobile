@@ -7,4 +7,9 @@ module.exports = defineConfig([
   {
     ignores: ['dist/*'],
   },
+  {
+    // Fetch-on-mount (`useEffect(() => { load(); }, [load])`) is the pattern used
+    // across screens; keep it visible as a warning rather than a failure.
+    rules: { 'react-hooks/set-state-in-effect': 'warn' },
+  },
 ]);
