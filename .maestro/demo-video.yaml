@@ -4,13 +4,23 @@ appId: id.permana.sales
 ---
 - launchApp:
     clearState: true
+# iOS Keychain survives clearState, so sign out if a previous run left a session.
+- runFlow:
+    when:
+      visible: "More, tab.*"
+    commands:
+      - tapOn: "More, tab.*"
+      - tapOn: ".*Sign out.*"
+      - waitForAnimationToEnd
 - startRecording: ${OUT}/demo
 - waitForAnimationToEnd
 - tapOn: "name@permana.net.id"
+- waitForAnimationToEnd
 - inputText: ${PERMANA_EMAIL}
 - tapOn:
     text: "Password"
     index: 1
+- waitForAnimationToEnd
 - inputText: ${PERMANA_PASSWORD}
 - tapOn:
     point: "50%,8%"
@@ -28,13 +38,21 @@ appId: id.permana.sales
 - waitForAnimationToEnd
 - tapOn: "More, tab.*"
 - waitForAnimationToEnd
-- tapOn: "Quotations"
+- tapOn: ".*Quotations.*"
 - waitForAnimationToEnd
-- back
-- tapOn: "Targets & reports"
+- swipe:
+    start: 1%,50%
+    end: 80%,50%
+    duration: 400
+- waitForAnimationToEnd
+- tapOn: ".*Targets & reports.*"
 - waitForAnimationToEnd
 - scroll
-- back
-- tapOn: "Products"
+- swipe:
+    start: 1%,50%
+    end: 80%,50%
+    duration: 400
+- waitForAnimationToEnd
+- tapOn: ".*Products.*"
 - waitForAnimationToEnd
 - stopRecording
