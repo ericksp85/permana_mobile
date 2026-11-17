@@ -39,7 +39,8 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Selfie photos for attendance check-in and canvassing photos."
+          "cameraPermission": "Selfie photos for attendance check-in and canvassing photos.",
+          "microphonePermission": false
         }
       ],
       "expo-font",
@@ -47,6 +48,15 @@
     ],
     "runtimeVersion": {
       "policy": "appVersion"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "aa9ff9e4-f098-4755-8c1d-73800472f559"
+      }
+    },
+    "owner": "ericksp85",
+    "updates": {
+      "url": "https://u.expo.dev/aa9ff9e4-f098-4755-8c1d-73800472f559"
     }
   }
 }

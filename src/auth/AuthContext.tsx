@@ -10,6 +10,7 @@ import {
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiError, apiFetch, setAuthToken, setUnauthorizedHandler } from '../api/client';
+import { setOutboxOwner } from '../offline/outbox';
 import { flushAndReport } from '../offline/sync';
 import { DEVICE_NAME } from '../config';
 import type { LoginResponse, Single, User } from '../types/api';
@@ -57,13 +58,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [initializing, setInitializing] = useState(true);
     const [user, setUser] = useState<User | null>(null);
 
+    // Single place that changes the signed-in user, so the offline queue always
+    // acts for the right account.
+    const applyUser = useCallback((u: User | null) => {
+        setOutboxOwner(u?.id ?? null);
+        setUser(u);
+    }, []);
+
     // The server rejected our token mid-session (revoked / expired): sign out.
     useEffect(() => {
         setUnauthorizedHandler(() => {
-            void clearSession().then(() => setUser(null));
+            void clearSession().then(() => applyUser(null));
         });
         return () => setUnauthorizedHandler(null);
-    }, []);
+    }, [applyUser]);
 
     // On launch, restore a saved token and re-hydrate the user from /me.
     useEffect(() => {
@@ -74,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setAuthToken(token);
                 try {
                     const me = await apiFetch<Single<User>>('/me');
-                    setUser(me.data);
+                    applyUser(me.data);
                     void cacheUser(me.data);
                     void flushAndReport();
                 } catch (e) {
@@ -85,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         // Offline / server trouble: keep the session and use the
                         // last known user so field work can continue offline.
                         const cached = await readCachedUser();
-                        if (cached) setUser(cached);
+                        if (cached) applyUser(cached);
                         else setAuthToken(null);
                     }
                 }
@@ -93,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setInitializing(false);
             }
         })();
-    }, []);
+    }, [applyUser]);
 
     const signIn = useCallback(async (email: string, password: string) => {
         const res = await apiFetch<LoginResponse>('/login', {
@@ -102,10 +110,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         await SecureStore.setItemAsync(TOKEN_KEY, res.token);
         setAuthToken(res.token);
-        setUser(res.user);
+        applyUser(res.user);
         void cacheUser(res.user);
         void flushAndReport();
-    }, []);
+    }, [applyUser]);
 
     const signOut = useCallback(async () => {
         try {
@@ -114,8 +122,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Even if the server call fails, clear the local session.
         }
         await clearSession();
-        setUser(null);
-    }, []);
+        applyUser(null);
+    }, [applyUser]);
 
     const value = useMemo<AuthState>(
         () => ({ initializing, user, signIn, signOut }),

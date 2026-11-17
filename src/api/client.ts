@@ -70,6 +70,8 @@ type Options = {
     body?: unknown;
     /** Extra query params appended to the URL. */
     query?: Record<string, string | number | undefined>;
+    /** Extra request headers (e.g. Idempotency-Key). */
+    headers?: Record<string, string>;
 };
 
 /**
@@ -90,6 +92,7 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
     const headers: Record<string, string> = {
         Accept: 'application/json',
         ...API_EXTRA_HEADERS,
+        ...options.headers,
     };
     if (options.body !== undefined) headers['Content-Type'] = 'application/json';
     if (authToken) headers.Authorization = `Bearer ${authToken}`;

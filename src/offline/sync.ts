@@ -1,6 +1,6 @@
 import { Alert } from 'react-native';
 import { ApiError, apiFetch, hasAuthToken, isTransientError } from '../api/client';
-import { enqueue, getOutbox, loadOutbox, removeFromOutbox, type OutboxKind } from './outbox';
+import { enqueue, getOutbox, loadOutbox, newIdempotencyKey, removeFromOutbox, type OutboxKind } from './outbox';
 
 /**
  * Queue only when a retry can succeed: no connectivity, or a temporary server
@@ -22,16 +22,23 @@ export async function submitOrQueue<T>(
     online: boolean,
     entry: { kind: OutboxKind; label: string; path: string; body: unknown },
 ): Promise<QueueResult<T>> {
+    // One key per logical mutation: reused if the first attempt is queued, so a
+    // delivery that succeeded but lost its response can't be applied twice.
+    const idempotencyKey = newIdempotencyKey();
     if (!online) {
-        await enqueue(entry);
+        await enqueue({ ...entry, idempotencyKey });
         return { queued: true };
     }
     try {
-        const data = await apiFetch<T>(entry.path, { method: 'POST', body: entry.body });
+        const data = await apiFetch<T>(entry.path, {
+            method: 'POST',
+            body: entry.body,
+            headers: { 'Idempotency-Key': idempotencyKey },
+        });
         return { queued: false, data };
     } catch (e) {
         if (isConnectivityError(e)) {
-            await enqueue(entry);
+            await enqueue({ ...entry, idempotencyKey });
             return { queued: true };
         }
         throw e;
@@ -75,7 +82,11 @@ export async function flushOutbox(): Promise<FlushResult & { droppedItems: Dropp
         // Snapshot ids in order; the queue may change under us between awaits.
         for (const item of [...getOutbox()]) {
             try {
-                await apiFetch(item.path, { method: item.method, body: item.body });
+                await apiFetch(item.path, {
+                    method: item.method,
+                    body: item.body,
+                    headers: item.idempotencyKey ? { 'Idempotency-Key': item.idempotencyKey } : undefined,
+                });
                 await removeFromOutbox(item.id);
                 sent += 1;
             } catch (e) {

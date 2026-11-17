@@ -28,6 +28,7 @@ beforeEach(async () => {
         outbox: require('../offline/outbox'),
     };
     m.client.setAuthToken('token');
+    m.outbox.setOutboxOwner(1);
 });
 
 describe('submitOrQueue', () => {
@@ -109,8 +110,48 @@ describe('flushOutbox', () => {
         const client = require('../api/client');
         const sync = require('../offline/sync');
         client.setAuthToken('token');
+        require('../offline/outbox').setOutboxOwner(1);
         fetchMock.mockReturnValue(respond(200));
         const r = await sync.flushOutbox(); // queue not loaded yet at this point
         expect(r.sent).toBe(1);
+    });
+});
+
+describe('account ownership', () => {
+    it("never sends one account's queued items under another account", async () => {
+        await m.outbox.enqueue({ ...entry, label: 'from user 1' });
+        m.outbox.setOutboxOwner(2);
+        fetchMock.mockReturnValue(respond(200));
+
+        expect(m.outbox.outboxCount()).toBe(0);
+        const r = await m.sync.flushOutbox();
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(r.sent).toBe(0);
+
+        // ...and they are still there for user 1.
+        m.outbox.setOutboxOwner(1);
+        expect(m.outbox.outboxCount()).toBe(1);
+        const again = await m.sync.flushOutbox();
+        expect(again.sent).toBe(1);
+    });
+
+    it('shows nothing while signed out', async () => {
+        await m.outbox.enqueue(entry);
+        m.outbox.setOutboxOwner(null);
+        expect(m.outbox.outboxCount()).toBe(0);
+    });
+});
+
+describe('idempotency key', () => {
+    it('is sent on the first attempt and reused when the item is queued and flushed', async () => {
+        fetchMock.mockRejectedValueOnce(new TypeError('offline'));
+        await m.sync.submitOrQueue(true, entry);
+        const firstKey = fetchMock.mock.calls[0][1].headers['Idempotency-Key'];
+        expect(firstKey).toBeTruthy();
+        expect(m.outbox.getOutbox()[0].idempotencyKey).toBe(firstKey);
+
+        fetchMock.mockReturnValue(respond(200));
+        await m.sync.flushOutbox();
+        expect(fetchMock.mock.calls[1][1].headers['Idempotency-Key']).toBe(firstKey);
     });
 });
