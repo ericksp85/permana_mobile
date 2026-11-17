@@ -56,14 +56,14 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
+    "owner": "pt-medianusa-permana",
     "extra": {
       "eas": {
-        "projectId": "aa9ff9e4-f098-4755-8c1d-73800472f559"
+        "projectId": "dbb348d5-6249-4548-a8a9-9e0d22288906"
       }
     },
-    "owner": "ericksp85",
     "updates": {
-      "url": "https://u.expo.dev/aa9ff9e4-f098-4755-8c1d-73800472f559"
+      "url": "https://u.expo.dev/dbb348d5-6249-4548-a8a9-9e0d22288906"
     }
   }
 }
