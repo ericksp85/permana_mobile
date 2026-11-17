@@ -12,7 +12,8 @@
       "bundleIdentifier": "id.permana.sales",
       "infoPlist": {
         "NSCameraUsageDescription": "Selfie photos for attendance check-in and canvassing photos.",
-        "NSLocationWhenInUseUsageDescription": "Tags your location for check-in and field visits."
+        "NSLocationWhenInUseUsageDescription": "Tags your location for check-in and field visits.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
