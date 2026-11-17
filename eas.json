@@ -9,7 +9,7 @@
       "distribution": "internal",
       "channel": "development",
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "http://sales.test/api/v1",
+        "EXPO_PUBLIC_API_BASE_URL": "https://sales.permana.net.id/api/v1",
         "EXPO_PUBLIC_DEVICE_NAME": "Permana Mobile (dev build)"
       },
       "ios": {
@@ -20,7 +20,7 @@
       "distribution": "internal",
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://staging.sales.permana.net.id/api/v1",
+        "EXPO_PUBLIC_API_BASE_URL": "https://sales.permana.net.id/api/v1",
         "EXPO_PUBLIC_DEVICE_NAME": "Permana Mobile (preview)"
       },
       "android": {

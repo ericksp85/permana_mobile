@@ -30,6 +30,7 @@ export default function LoginScreen() {
             if (e instanceof ApiError) {
                 setError(e.firstError() ?? e.message);
             } else {
+                console.warn('Login failed (non-API error):', e);
                 setError('Can’t reach the server. Check your connection.');
             }
         } finally {

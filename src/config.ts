@@ -8,20 +8,20 @@ import { Platform } from 'react-native';
  * `EXPO_PUBLIC_*` variable at build time), so each EAS profile in eas.json
  * points at the right backend — see eas.json's `env` blocks.
  *
- * The default is Herd's `http://sales.test`, used for local dev. The iOS
- * simulator shares the Mac's network and DNS, so that normally resolves. If
- * your simulator/device can't reach it, set EXPO_PUBLIC_API_BASE_URL to your
- * Mac's LAN IP (e.g. http://192.168.1.20/api/v1) or an `herd share` URL.
+ * The default is the live console backend (https://sales.permana.net.id), so
+ * the app shares users and data with the web console. To develop against a
+ * local Herd site instead, set EXPO_PUBLIC_API_BASE_URL (e.g. in `.env.local`):
+ *   - iOS simulator:   http://sales.test/api/v1
+ *   - Android emulator: http://10.0.2.2/api/v1  (also sets the Host header below)
+ *   - physical device: http://<Mac LAN IP>/api/v1 or an `herd share` URL
  */
-// The Android emulator can't resolve Herd's `.test` domains, but it reaches the
-// Mac's loopback at 10.0.2.2. In dev we call that and send the Herd site name as
-// the Host header so nginx routes to the right site.
-const useAndroidEmulatorHost =
-    __DEV__ && Platform.OS === 'android' && !process.env.EXPO_PUBLIC_API_BASE_URL;
-
 export const API_BASE_URL =
-    process.env.EXPO_PUBLIC_API_BASE_URL ??
-    (useAndroidEmulatorHost ? 'http://10.0.2.2/api/v1' : 'http://sales.test/api/v1');
+    process.env.EXPO_PUBLIC_API_BASE_URL ?? 'https://sales.permana.net.id/api/v1';
+
+// The Android emulator can't resolve Herd's `.test` domains, but it reaches the
+// Mac's loopback at 10.0.2.2. When pointed there, send the Herd site name as the
+// Host header so nginx routes to the right site.
+const useAndroidEmulatorHost = __DEV__ && Platform.OS === 'android' && API_BASE_URL.includes('10.0.2.2');
 
 /** Extra headers needed to reach the backend in dev (empty in release builds). */
 export const API_EXTRA_HEADERS: Record<string, string> = useAndroidEmulatorHost

@@ -10,14 +10,16 @@ API (`/api/v1`) that also powers the Permana Sales web console and PWA.
 
 ## Menjalankan (dev)
 
-Pastikan backend hidup lebih dulu (Herd: `http://sales.test`).
+Default-nya app terhubung ke backend console live (`https://sales.permana.net.id`), jadi memakai user dan data yang sama dengan web console.
 
 ```bash
 npm install
 npx expo start --ios      # atau --android
 ```
 
-> **Alamat API:** default `http://sales.test/api/v1` (lihat `src/config.ts`).
+> **Alamat API:** default `https://sales.permana.net.id/api/v1` (lihat `src/config.ts`).
+> Untuk dev lokal (Herd), buat `.env.local` berisi `EXPO_PUBLIC_API_BASE_URL=http://sales.test/api/v1`
+> (Android emulator: `http://10.0.2.2/api/v1`).
 > Simulator iOS ikut DNS Mac, jadi `sales.test` biasanya kebaca. Kalau di HP
 > fisik / tidak kebaca, ganti ke IP LAN Mac (mis. `http://192.168.1.20/api/v1`).
 > HTTP non-TLS diizinkan untuk dev via ATS (`app.json`).
@@ -57,7 +59,7 @@ memakai **outbox** yang tahan restart (`src/offline/`):
 ## Build rilis (EAS)
 
 Profil build ada di [`eas.json`](eas.json): `development` (simulator + dev
-client), `preview` (internal / APK, backend staging), `production` (store).
+client), `preview` (internal / APK), `production` (store).
 URL API tiap profil diset lewat `EXPO_PUBLIC_API_BASE_URL` — sesuaikan host
 staging/produksi sebelum build.
 
