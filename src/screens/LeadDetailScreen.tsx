@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { apiFetch, ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
-import { Button, Card, Pill, StagePill, rupiah } from '../components/ui';
+import { Button, Card, PagedList, Pill, StagePill, rupiah } from '../components/ui';
 import { QuotationStepper } from './QuotationsScreen';
 import type { PipelineStackScreenProps } from '../navigation/types';
 import { useOffline } from '../offline/OfflineContext';
@@ -221,6 +221,8 @@ export default function LeadDetailScreen({
                             <Pressable
                                 key={t.value}
                                 onPress={() => setType(t.value)}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: active }}
                                 style={[styles.chip, active && styles.chipActive]}
                             >
                                 <Text style={[styles.chipText, active && styles.chipTextActive]}>
@@ -234,6 +236,7 @@ export default function LeadDetailScreen({
                     value={note}
                     onChangeText={setNote}
                     placeholder="Note (optional)"
+                    accessibilityLabel="Note (optional)"
                     placeholderTextColor={colors.mutedink}
                     style={styles.noteInput}
                     multiline
@@ -255,7 +258,9 @@ export default function LeadDetailScreen({
             {lead.activities.length === 0 && queuedActivities.length === 0 ? (
                 <Text style={styles.empty}>No activity yet.</Text>
             ) : (
-                lead.activities.map((a) => (
+                <PagedList
+                    items={lead.activities}
+                    renderItem={(a) => (
                     <View key={a.id} style={styles.timelineRow}>
                         <View style={styles.timelineDot} />
                         <View style={styles.timelineBody}>
@@ -267,7 +272,8 @@ export default function LeadDetailScreen({
                             </Text>
                         </View>
                     </View>
-                ))
+                    )}
+                />
             )}
         </ScrollView>
     );
@@ -391,6 +397,7 @@ function QuotationSection({
                         value={bandwidth}
                         onChangeText={setBandwidth}
                         placeholder="Bandwidth (e.g. 50 Mbps)"
+                        accessibilityLabel="Bandwidth (e.g. 50 Mbps)"
                         placeholderTextColor={colors.mutedink}
                         style={styles.input}
                     />
@@ -399,6 +406,7 @@ function QuotationSection({
                             value={mrc}
                             onChangeText={setMrc}
                             placeholder="MRC / mo"
+                            accessibilityLabel="MRC / mo"
                             placeholderTextColor={colors.mutedink}
                             keyboardType="number-pad"
                             style={[styles.input, { flex: 1 }]}
@@ -407,6 +415,7 @@ function QuotationSection({
                             value={otc}
                             onChangeText={setOtc}
                             placeholder="OTC (optional)"
+                            accessibilityLabel="OTC (optional)"
                             placeholderTextColor={colors.mutedink}
                             keyboardType="number-pad"
                             style={[styles.input, { flex: 1 }]}
@@ -467,6 +476,8 @@ function OptionRow<T extends number>({
                         <Pressable
                             key={o.value}
                             onPress={() => onChange(o.value)}
+                            accessibilityRole="button"
+                            accessibilityState={{ selected: active }}
                             style={[styles.chip, active && styles.chipActive]}
                         >
                             <Text style={[styles.chipText, active && styles.chipTextActive]}>
@@ -492,6 +503,7 @@ function ContactAction({
     return (
         <Pressable
             onPress={onPress}
+            accessibilityRole="button"
             style={({ pressed }) => [styles.contactAction, pressed && { opacity: 0.6 }]}
         >
             <Ionicons name={icon} size={18} color={colors.navy} />

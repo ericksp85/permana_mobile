@@ -76,6 +76,7 @@ export default function PipelineScreen({
                     value={query}
                     onChangeText={setQuery}
                     placeholder="Search company, contact, product"
+                    accessibilityLabel="Search company, contact, product"
                     placeholderTextColor={colors.mutedink}
                     style={styles.search}
                     autoCapitalize="none"
@@ -106,6 +107,7 @@ export default function PipelineScreen({
                                 company: item.company,
                             })
                         }
+                        accessibilityRole="button"
                         style={({ pressed }) => (pressed ? { opacity: 0.7 } : null)}
                     >
                         <Card style={styles.leadCard}>

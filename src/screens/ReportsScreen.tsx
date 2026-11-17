@@ -29,6 +29,8 @@ function Toggle<T extends string>({
                     <Pressable
                         key={o.value}
                         onPress={() => onChange(o.value)}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
                         style={[styles.toggleBtn, active && styles.toggleBtnActive]}
                     >
                         <Text style={[styles.toggleText, active && styles.toggleTextActive]}>

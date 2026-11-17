@@ -84,7 +84,7 @@ export default function NotificationsScreen() {
             {unread > 0 ? (
                 <View style={styles.bar}>
                     <Text style={styles.unread}>{unread} unread</Text>
-                    <Pressable onPress={markAll} hitSlop={8}>
+                    <Pressable onPress={markAll} hitSlop={10} accessibilityRole="button">
                         <Text style={styles.markAll}>Mark all read</Text>
                     </Pressable>
                 </View>
@@ -109,6 +109,7 @@ export default function NotificationsScreen() {
                 renderItem={({ item }) => (
                     <Pressable
                         onPress={() => markOne(item)}
+                        accessibilityRole="button"
                         style={({ pressed }) => (pressed ? { opacity: 0.7 } : null)}
                     >
                         <Card style={[styles.item, !item.read && styles.itemUnread]}>

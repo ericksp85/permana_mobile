@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
     ActivityIndicator,
     Pressable,
@@ -35,6 +35,9 @@ export function Button({
         <Pressable
             onPress={onPress}
             disabled={disabled || loading}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            accessibilityState={{ disabled: disabled || loading, busy: loading }}
             style={({ pressed }) => [
                 styles.button,
                 isPrimary ? styles.buttonPrimary : styles.buttonGhost,
@@ -53,6 +56,36 @@ export function Button({
     );
 }
 
+/**
+ * Renders a long list in pages with a "Show more" button. Use inside a
+ * ScrollView where a nested FlatList would defeat virtualization; each element
+ * returned by `renderItem` must carry its own `key`.
+ */
+export function PagedList<T>({
+    items,
+    renderItem,
+    pageSize = 20,
+}: {
+    items: T[];
+    renderItem: (item: T) => ReactNode;
+    pageSize?: number;
+}) {
+    const [shown, setShown] = useState(pageSize);
+    const remaining = items.length - shown;
+    return (
+        <>
+            {items.slice(0, shown).map(renderItem)}
+            {remaining > 0 ? (
+                <Button
+                    label={`Show more (${remaining})`}
+                    variant="ghost"
+                    onPress={() => setShown((n) => n + pageSize)}
+                />
+            ) : null}
+        </>
+    );
+}
+
 export function Field({
     label,
     error,
@@ -63,10 +96,15 @@ export function Field({
             <Text style={styles.fieldLabel}>{label}</Text>
             <TextInput
                 placeholderTextColor={colors.mutedink}
+                accessibilityLabel={label}
                 style={[styles.input, error ? { borderColor: colors.danger } : null]}
                 {...props}
             />
-            {error ? <Text style={styles.fieldError}>{error}</Text> : null}
+            {error ? (
+                <Text style={styles.fieldError} accessibilityRole="alert" accessibilityLiveRegion="polite">
+                    {error}
+                </Text>
+            ) : null}
         </View>
     );
 }
@@ -112,7 +150,13 @@ export function ProgressRing({
     const circ = 2 * Math.PI * r;
     const offset = circ * (1 - clamped / 100);
     return (
-        <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <View
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel={label ? `${label} progress` : 'Progress'}
+            accessibilityValue={{ min: 0, max: 100, now: clamped }}
+            style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}
+        >
             <Svg width={size} height={size} style={{ position: 'absolute', transform: [{ rotate: '-90deg' }] }}>
                 <Circle cx={size / 2} cy={size / 2} r={r} stroke={track} strokeWidth={stroke} fill="none" />
                 <Circle

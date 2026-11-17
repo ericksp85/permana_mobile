@@ -14,7 +14,7 @@ import {
     View,
 } from 'react-native';
 import { apiFetch, ApiError } from '../api/client';
-import { Button, Card, Pill } from '../components/ui';
+import { Button, Card, PagedList, Pill } from '../components/ui';
 import type { MoreStackScreenProps } from '../navigation/types';
 import { useOffline } from '../offline/OfflineContext';
 import SyncBanner from '../offline/SyncBanner';
@@ -240,6 +240,7 @@ export default function CanvassAreaScreen({
                     value={visitName}
                     onChangeText={setVisitName}
                     placeholder="Place / business name"
+                    accessibilityLabel="Place / business name"
                     placeholderTextColor={colors.mutedink}
                     style={styles.input}
                 />
@@ -250,6 +251,8 @@ export default function CanvassAreaScreen({
                             <Pressable
                                 key={r.value}
                                 onPress={() => setResult(r.value)}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: active }}
                                 style={[styles.chip, active && styles.chipActive]}
                             >
                                 <Text style={[styles.chipText, active && styles.chipTextActive]}>
@@ -263,6 +266,7 @@ export default function CanvassAreaScreen({
                     value={note}
                     onChangeText={setNote}
                     placeholder="Note (optional)"
+                    accessibilityLabel="Note (optional)"
                     placeholderTextColor={colors.mutedink}
                     style={[styles.input, styles.noteInput]}
                     multiline
@@ -274,6 +278,8 @@ export default function CanvassAreaScreen({
                     <Pressable
                         onPress={captureLocation}
                         disabled={busy}
+                        accessibilityRole="button"
+                        accessibilityState={{ disabled: busy }}
                         style={[styles.captureBtn, coords && styles.captureBtnDone]}
                     >
                         <Ionicons
@@ -286,6 +292,8 @@ export default function CanvassAreaScreen({
                     <Pressable
                         onPress={takePhoto}
                         disabled={busy}
+                        accessibilityRole="button"
+                        accessibilityState={{ disabled: busy }}
                         style={[styles.captureBtn, photo && styles.captureBtnDone]}
                     >
                         <Ionicons
@@ -324,7 +332,9 @@ export default function CanvassAreaScreen({
             {area.visits.length === 0 && queued.length === 0 ? (
                 <Text style={styles.empty}>No visits in this area yet.</Text>
             ) : (
-                area.visits.map((v) => {
+                <PagedList
+                    items={area.visits}
+                    renderItem={(v) => {
                     const rs = resultStyle(v.result);
                     const canConvert = v.result === 'interested' && v.lead_id === null;
                     return (
@@ -365,7 +375,8 @@ export default function CanvassAreaScreen({
                             ) : null}
                         </Card>
                     );
-                })
+                    }}
+                />
             )}
         </ScrollView>
     );

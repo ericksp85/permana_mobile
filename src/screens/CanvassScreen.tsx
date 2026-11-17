@@ -74,6 +74,7 @@ export default function CanvassScreen({ navigation }: MoreStackScreenProps<'Canv
                             onPress={() =>
                                 navigation.navigate('CanvassArea', { areaId: item.id, name: item.name })
                             }
+                            accessibilityRole="button"
                             style={({ pressed }) => (pressed ? { opacity: 0.7 } : null)}
                         >
                             <Card style={styles.areaCard}>

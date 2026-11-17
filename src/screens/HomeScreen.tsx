@@ -126,6 +126,8 @@ export default function HomeScreen({ navigation }: HomeStackScreenProps<'HomeMai
                             onPress={() => parent?.navigate('More', { screen: 'Notifications' })}
                             style={styles.bell}
                             hitSlop={8}
+                            accessibilityRole="button"
+                            accessibilityLabel={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
                         >
                             <Ionicons name="notifications-outline" size={22} color={colors.white} />
                             {unread > 0 ? (
@@ -144,7 +146,7 @@ export default function HomeScreen({ navigation }: HomeStackScreenProps<'HomeMai
                             <Text style={styles.heroWon}>
                                 {rupiahShort(summary?.won)} / {rupiahShort(summary?.mrc_target)}
                             </Text>
-                            <Pressable onPress={() => parent?.navigate('More', { screen: 'Reports' })} hitSlop={6}>
+                            <Pressable onPress={() => parent?.navigate('More', { screen: 'Reports' })} hitSlop={10} accessibilityRole="link">
                                 <Text style={styles.heroLink}>Targets &amp; reports →</Text>
                             </Pressable>
                         </View>
@@ -157,6 +159,7 @@ export default function HomeScreen({ navigation }: HomeStackScreenProps<'HomeMai
                         <Pressable
                             key={a.label}
                             onPress={a.onPress}
+                            accessibilityRole="button"
                             style={({ pressed }) => [styles.action, pressed && { opacity: 0.7 }]}
                         >
                             <View style={[styles.actionIcon, { backgroundColor: a.bg }]}>
@@ -172,7 +175,7 @@ export default function HomeScreen({ navigation }: HomeStackScreenProps<'HomeMai
                 {/* Today */}
                 <View style={styles.sectionHead}>
                     <Text style={styles.sectionTitle}>Today · {todayLabel()}</Text>
-                    <Pressable onPress={() => parent?.navigate('Schedule')} hitSlop={6}>
+                    <Pressable onPress={() => parent?.navigate('Schedule')} hitSlop={10} accessibilityRole="link">
                         <Text style={styles.link}>Schedule →</Text>
                     </Pressable>
                 </View>
@@ -214,7 +217,7 @@ export default function HomeScreen({ navigation }: HomeStackScreenProps<'HomeMai
                 {/* Follow-ups due */}
                 <View style={styles.sectionHead}>
                     <Text style={styles.sectionTitle}>Follow-ups due</Text>
-                    <Pressable onPress={() => parent?.navigate('Pipeline')} hitSlop={6}>
+                    <Pressable onPress={() => parent?.navigate('Pipeline')} hitSlop={10} accessibilityRole="link">
                         <Text style={styles.link}>Pipeline →</Text>
                     </Pressable>
                 </View>
@@ -229,6 +232,7 @@ export default function HomeScreen({ navigation }: HomeStackScreenProps<'HomeMai
                             <Pressable
                                 key={l.id}
                                 onPress={() => openLead(l)}
+                                accessibilityRole="button"
                                 style={({ pressed }) => [styles.leadRow, pressed && { opacity: 0.6 }]}
                             >
                                 <View style={{ flex: 1, gap: 2 }}>
@@ -248,7 +252,7 @@ export default function HomeScreen({ navigation }: HomeStackScreenProps<'HomeMai
                 {/* My pipeline */}
                 <View style={styles.sectionHead}>
                     <Text style={styles.sectionTitle}>My pipeline</Text>
-                    <Pressable onPress={() => parent?.navigate('More', { screen: 'Reports' })} hitSlop={6}>
+                    <Pressable onPress={() => parent?.navigate('More', { screen: 'Reports' })} hitSlop={10} accessibilityRole="link">
                         <Text style={styles.link}>Rank →</Text>
                     </Pressable>
                 </View>

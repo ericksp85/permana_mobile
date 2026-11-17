@@ -89,6 +89,8 @@ export default function QuotationsScreen() {
                         return (
                             <Pressable
                                 onPress={() => setFilter(f.value)}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: active }}
                                 style={[styles.chip, active && styles.chipActive]}
                             >
                                 <Text style={[styles.chipText, active && styles.chipTextActive]}>

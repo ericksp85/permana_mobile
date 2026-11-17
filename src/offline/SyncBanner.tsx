@@ -20,7 +20,12 @@ export default function SyncBanner() {
         : `Syncing ${pending} change${pending > 1 ? 's' : ''}…`;
 
     return (
-        <View style={[styles.bar, offline ? styles.offline : styles.syncing]}>
+        <View
+            accessible
+            accessibilityLiveRegion="polite"
+            accessibilityLabel={label}
+            style={[styles.bar, offline ? styles.offline : styles.syncing]}
+        >
             <Ionicons
                 name={offline ? 'cloud-offline-outline' : 'sync-outline'}
                 size={16}

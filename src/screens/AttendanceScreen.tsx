@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiFetch, ApiError } from '../api/client';
-import { Button, Card, Pill } from '../components/ui';
+import { Button, Card, PagedList, Pill } from '../components/ui';
 import { useOffline } from '../offline/OfflineContext';
 import SyncBanner from '../offline/SyncBanner';
 import { submitOrQueue } from '../offline/sync';
@@ -354,6 +354,7 @@ export default function AttendanceScreen() {
                                     value={reason}
                                     onChangeText={setReason}
                                     placeholder="e.g. client visit, field work"
+                                    accessibilityLabel="Reason for being outside"
                                     placeholderTextColor={colors.mutedink}
                                     style={styles.reasonInput}
                                     multiline
@@ -396,7 +397,9 @@ export default function AttendanceScreen() {
                 {data?.history && data.history.length > 0 ? (
                     <View style={{ gap: spacing.sm }}>
                         <Text style={styles.cardLabel}>History</Text>
-                        {data.history.map((row) => (
+                        <PagedList
+                            items={data.history}
+                            renderItem={(row) => (
                             <Card key={row.id} style={styles.historyCard}>
                                 <Text style={styles.historyDate}>{dayOf(row.date)}</Text>
                                 <Text style={styles.historyTime}>
@@ -410,7 +413,8 @@ export default function AttendanceScreen() {
                                     <Pill bg="#fbe6e6" fg="#a83434">Outside</Pill>
                                 )}
                             </Card>
-                        ))}
+                        )}
+                        />
                     </View>
                 ) : null}
             </ScrollView>

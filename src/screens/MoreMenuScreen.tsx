@@ -101,6 +101,7 @@ export default function MoreMenuScreen({ navigation }: MoreStackScreenProps<'Mor
                         <Pressable
                             key={item.label}
                             onPress={() => navigation.navigate(item.route as never)}
+                            accessibilityRole="button"
                             style={({ pressed }) => (pressed ? { opacity: 0.7 } : null)}
                         >
                             <Card style={styles.row}>
@@ -119,6 +120,7 @@ export default function MoreMenuScreen({ navigation }: MoreStackScreenProps<'Mor
 
                 <Pressable
                     onPress={signOut}
+                    accessibilityRole="button"
                     style={({ pressed }) => [styles.signOut, pressed && { opacity: 0.7 }]}
                 >
                     <Ionicons name="log-out-outline" size={20} color={colors.danger} />
