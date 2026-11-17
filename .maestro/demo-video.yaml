@@ -1,0 +1,37 @@
+# Records a ~40s walkthrough. Same env vars as store-screenshots.yaml.
+#   maestro test -e PERMANA_EMAIL=... -e PERMANA_PASSWORD=... -e OUT=store-assets/ios-iphone .maestro/demo-video.yaml
+appId: id.permana.sales
+---
+- launchApp:
+    clearState: true
+- startRecording: ${OUT}/demo
+- waitForAnimationToEnd
+- tapOn: "Work email"
+- inputText: ${PERMANA_EMAIL}
+- tapOn: "Password"
+- inputText: ${PERMANA_PASSWORD}
+- hideKeyboard
+- tapOn: "Sign in"
+- extendedWaitUntil:
+    visible: "Pipeline, tab.*"
+    timeout: 30000
+- waitForAnimationToEnd
+- scroll
+- scroll
+- tapOn: "Pipeline, tab.*"
+- waitForAnimationToEnd
+- scroll
+- tapOn: "Schedule, tab.*"
+- waitForAnimationToEnd
+- tapOn: "More, tab.*"
+- waitForAnimationToEnd
+- tapOn: "Quotations"
+- waitForAnimationToEnd
+- back
+- tapOn: "Targets & reports"
+- waitForAnimationToEnd
+- scroll
+- back
+- tapOn: "Products"
+- waitForAnimationToEnd
+- stopRecording

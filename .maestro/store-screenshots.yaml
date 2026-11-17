@@ -1,0 +1,45 @@
+# Captures the app-store screenshots.
+# Run:  set -a; source .maestro/.env.local; set +a
+#       maestro test -e PERMANA_EMAIL="$PERMANA_EMAIL" -e PERMANA_PASSWORD="$PERMANA_PASSWORD" \
+#         -e OUT=store-assets/ios-iphone .maestro/store-screenshots.yaml
+appId: id.permana.sales
+---
+- launchApp:
+    clearState: true
+- tapOn: "Work email"
+- inputText: ${PERMANA_EMAIL}
+- tapOn: "Password"
+- inputText: ${PERMANA_PASSWORD}
+- hideKeyboard
+- tapOn: "Sign in"
+- extendedWaitUntil:
+    visible: "Pipeline, tab.*"
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/01-home
+
+- tapOn: "Pipeline, tab.*"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/02-pipeline
+
+- tapOn: "Schedule, tab.*"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/03-schedule
+
+- tapOn: "More, tab.*"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/04-more
+
+- tapOn: "Quotations"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/05-quotations
+- back
+
+- tapOn: "Targets & reports"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/06-reports
+- back
+
+- tapOn: "Products"
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/07-products
