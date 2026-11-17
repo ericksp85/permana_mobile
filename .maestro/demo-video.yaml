@@ -6,11 +6,14 @@ appId: id.permana.sales
     clearState: true
 - startRecording: ${OUT}/demo
 - waitForAnimationToEnd
-- tapOn: "Work email"
+- tapOn: "name@permana.net.id"
 - inputText: ${PERMANA_EMAIL}
-- tapOn: "Password"
+- tapOn:
+    text: "Password"
+    index: 1
 - inputText: ${PERMANA_PASSWORD}
-- hideKeyboard
+- tapOn:
+    point: "50%,8%"
 - tapOn: "Sign in"
 - extendedWaitUntil:
     visible: "Pipeline, tab.*"
