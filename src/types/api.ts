@@ -118,6 +118,20 @@ export type Paginated<T> = {
     };
 };
 
+/** GET /products — the active product catalogue. */
+export type Product = {
+    id: number;
+    code: string;
+    name: string;
+    /** e.g. "Dedicated Internet Access", "Hosta", "iMore". */
+    group: string;
+    /** "Fiber" | "Radio". */
+    media: string;
+    /** Starting price in Rupiah; null when not set. */
+    starting_price: number | null;
+    is_active: boolean;
+};
+
 /** A single resource is wrapped in `data`. */
 export type Single<T> = { data: T };
 
