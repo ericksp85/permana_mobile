@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "scheme": "permana",
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "id.permana.sales",
       "infoPlist": {
         "NSCameraUsageDescription": "Selfie photos for attendance check-in and canvassing photos.",
