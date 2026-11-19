@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiFetch, ApiError } from '../api/client';
 import { Button, Card, PagedList, Pill } from '../components/ui';
+import { shrinkPhoto } from '../utils/photo';
 import { useOffline } from '../offline/OfflineContext';
 import SyncBanner from '../offline/SyncBanner';
 import { submitOrQueue } from '../offline/sync';
@@ -135,9 +136,7 @@ export default function AttendanceScreen() {
             allowsEditing: false,
         });
         if (result.canceled || !result.assets?.[0]?.base64) return null;
-        const asset = result.assets[0];
-        const mime = asset.mimeType ?? 'image/jpeg';
-        return { uri: asset.uri, dataUrl: `data:${mime};base64,${asset.base64}` };
+        return shrinkPhoto(result.assets[0]);
     };
 
     // Grab GPS and selfie in one tap so the point and the photo match.

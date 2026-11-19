@@ -16,6 +16,7 @@ import {
 import { apiFetch, ApiError } from '../api/client';
 import { Button, Card, PagedList, Pill } from '../components/ui';
 import type { MoreStackScreenProps } from '../navigation/types';
+import { shrinkPhoto } from '../utils/photo';
 import { useOffline } from '../offline/OfflineContext';
 import SyncBanner from '../offline/SyncBanner';
 import { submitOrQueue } from '../offline/sync';
@@ -125,9 +126,7 @@ export default function CanvassAreaScreen({
                 allowsEditing: false,
             });
             if (res.canceled || !res.assets?.[0]?.base64) return;
-            const asset = res.assets[0];
-            const mime = asset.mimeType ?? 'image/jpeg';
-            setPhoto({ uri: asset.uri, dataUrl: `data:${mime};base64,${asset.base64}` });
+            setPhoto(await shrinkPhoto(res.assets[0]));
         } catch {
             setError('Couldn’t take photo.');
         } finally {
