@@ -71,7 +71,17 @@ export default function PipelineScreen({
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <View style={styles.header}>
-                <Text style={styles.title}>Pipeline</Text>
+                <View style={styles.titleRow}>
+                    <Text style={styles.title}>Pipeline</Text>
+                    <Pressable
+                        onPress={() => navigation.navigate('NewLead')}
+                        accessibilityRole="button"
+                        accessibilityLabel="New lead"
+                        style={styles.addBtn}
+                    >
+                        <Text style={styles.addText}>+ New lead</Text>
+                    </Pressable>
+                </View>
                 <TextInput
                     value={query}
                     onChangeText={setQuery}
@@ -142,6 +152,14 @@ export default function PipelineScreen({
 }
 
 const styles = StyleSheet.create({
+    titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    addBtn: {
+        backgroundColor: colors.navy,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.sm,
+        borderRadius: radius.pill,
+    },
+    addText: { color: '#fff', fontWeight: '700', fontSize: 14 },
     safe: { flex: 1, backgroundColor: colors.softbg },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.softbg },
     header: {

@@ -98,7 +98,7 @@ export default function HomeScreen({ navigation }: HomeStackScreenProps<'HomeMai
         });
 
     const quickActions: QuickAction[] = [
-        { label: 'New lead', icon: 'add-outline', bg: '#ddf5f6', fg: '#00737a', onPress: () => parent?.navigate('Pipeline') },
+        { label: 'New lead', icon: 'add-outline', bg: '#ddf5f6', fg: '#00737a', onPress: () => parent?.navigate('Pipeline', { screen: 'NewLead' }) },
         { label: 'Log activity', icon: 'create-outline', bg: '#e9edfb', fg: '#3a52a8', onPress: () => parent?.navigate('Pipeline') },
         { label: 'Check-in', icon: 'finger-print-outline', bg: '#dff3e8', fg: '#137347', onPress: () => parent?.navigate('More', { screen: 'Attendance' }) },
         ...(canCanvass(user)

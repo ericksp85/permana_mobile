@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
  * restart, and flushed in order once the network returns (see sync.ts).
  */
 
-export type OutboxKind = 'checkin' | 'checkout' | 'visit' | 'activity';
+export type OutboxKind = 'checkin' | 'checkout' | 'visit' | 'activity' | 'lead';
 
 export type OutboxItem = {
     id: string;

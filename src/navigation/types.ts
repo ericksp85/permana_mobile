@@ -12,6 +12,7 @@ export type HomeStackScreenProps<T extends keyof HomeStackParamList> =
 export type PipelineStackParamList = {
     PipelineList: undefined;
     LeadDetail: { leadId: number; company: string };
+    NewLead: undefined;
 };
 
 export type PipelineStackScreenProps<T extends keyof PipelineStackParamList> =

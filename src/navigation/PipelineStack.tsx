@@ -1,5 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LeadDetailScreen from '../screens/LeadDetailScreen';
+import NewLeadScreen from '../screens/NewLeadScreen';
 import PipelineScreen from '../screens/PipelineScreen';
 import { colors } from '../theme';
 import type { PipelineStackParamList } from './types';
@@ -25,6 +26,11 @@ export default function PipelineStack() {
                 name="LeadDetail"
                 component={LeadDetailScreen}
                 options={{ title: 'Lead', headerBackTitle: 'Pipeline' }}
+            />
+            <Stack.Screen
+                name="NewLead"
+                component={NewLeadScreen}
+                options={{ title: 'New lead', headerBackTitle: 'Pipeline' }}
             />
         </Stack.Navigator>
     );
