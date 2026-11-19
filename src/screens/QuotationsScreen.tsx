@@ -8,6 +8,7 @@ import {
     Text,
     View,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { apiFetch } from '../api/client';
 import { Card, Pill, rupiah } from '../components/ui';
 import { colors, spacing } from '../theme';
@@ -42,6 +43,7 @@ export function QuotationStepper({ step }: { step: number }) {
 }
 
 export default function QuotationsScreen() {
+    const navigation = useNavigation();
     const [filter, setFilter] = useState<QuotationStatus | 'all'>('all');
     const [items, setItems] = useState<Quotation[]>([]);
     const [loading, setLoading] = useState(true);
@@ -119,6 +121,18 @@ export default function QuotationsScreen() {
                 renderItem={({ item }) => {
                     const st = QUOTATION_STATUS_STYLE[item.status];
                     return (
+                        <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel={`Open ${item.company ?? 'lead'}`}
+                            onPress={() =>
+                                navigation.getParent()?.navigate('Pipeline', {
+                                    screen: 'LeadDetail',
+                                    initial: false,
+                                    params: { leadId: item.lead_id, company: item.company ?? `Lead #${item.lead_id}` },
+                                })
+                            }
+                            style={({ pressed }) => (pressed ? { opacity: 0.7 } : null)}
+                        >
                         <Card style={styles.card}>
                             <View style={styles.top}>
                                 <Text style={styles.company} numberOfLines={1}>
@@ -138,6 +152,7 @@ export default function QuotationsScreen() {
                             </View>
                             <QuotationStepper step={item.completed_step} />
                         </Card>
+                        </Pressable>
                     );
                 }}
             />

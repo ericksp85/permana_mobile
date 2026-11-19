@@ -13,6 +13,7 @@ import {
 import { apiFetch, ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { Button, Card, PagedList, Pill, StagePill, rupiah } from '../components/ui';
+import { LeadActions, QuotationReview } from '../components/LeadActions';
 import { QuotationStepper } from './QuotationsScreen';
 import type { PipelineStackScreenProps } from '../navigation/types';
 import { useOffline } from '../offline/OfflineContext';
@@ -28,6 +29,7 @@ import {
     type LeadDetail,
     type Paginated,
     type Quotation,
+    type Role,
     type Single,
 } from '../types/api';
 
@@ -74,12 +76,15 @@ export default function LeadDetailScreen({
     const load = useCallback(async () => {
         try {
             setError(undefined);
-            const [leadRes, quoteRes] = await Promise.all([
+            // The lead is required; the quotation list is best-effort so a hiccup
+            // there doesn't blank the whole screen.
+            const [leadRes, quoteRes] = await Promise.allSettled([
                 apiFetch<Single<LeadDetail>>(`/leads/${leadId}`),
                 apiFetch<Paginated<Quotation>>('/quotations', { query: { lead_id: leadId } }),
             ]);
-            setLead(leadRes.data);
-            setQuotations(quoteRes.data);
+            if (leadRes.status === 'rejected') throw leadRes.reason;
+            setLead(leadRes.value.data);
+            if (quoteRes.status === 'fulfilled') setQuotations(quoteRes.value.data);
             // Server timeline is authoritative once we can read it.
             setQueuedActivities([]);
         } catch {
@@ -148,7 +153,13 @@ export default function LeadDetailScreen({
     const canManageQuote = user?.id === lead.owner_id;
 
     return (
-        <ScrollView showsVerticalScrollIndicator={false} style={styles.screen} contentContainerStyle={styles.content}>
+        <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={styles.screen}
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+        >
             <SyncBanner />
             <Card style={{ gap: spacing.sm }}>
                 <View style={styles.rowBetween}>
@@ -201,10 +212,16 @@ export default function LeadDetailScreen({
                 {lead.phone ? <Info label="Phone" value={lead.phone} /> : null}
                 {lead.address ? <Info label="Address" value={lead.address} /> : null}
                 {lead.bandwidth ? <Info label="Bandwidth" value={lead.bandwidth} /> : null}
+                {lead.est_mrc ? <Info label="Est. MRC" value={`${rupiah(lead.est_mrc)}/mo`} /> : null}
+                {lead.owner ? <Info label="Owner" value={lead.owner} /> : null}
                 {lead.next_step ? <Info label="Next step" value={lead.next_step} /> : null}
             </Card>
 
+            <LeadActions lead={lead} role={user?.role} online={online} onChanged={load} />
+
             <QuotationSection
+                role={user?.role}
+                online={online}
                 leadId={leadId}
                 quotations={quotations}
                 canManage={canManageQuote}
@@ -280,12 +297,16 @@ export default function LeadDetailScreen({
 }
 
 function QuotationSection({
+    role,
+    online,
     leadId,
     quotations,
     canManage,
     defaultBandwidth,
     onChanged,
 }: {
+    role: Role | null | undefined;
+    online: boolean;
     leadId: number;
     quotations: Quotation[];
     canManage: boolean;
@@ -382,6 +403,10 @@ function QuotationSection({
 
             {quotations.length === 0 && !showForm ? (
                 <Text style={styles.empty}>No quotation yet.</Text>
+            ) : null}
+
+            {latest ? (
+                <QuotationReview quotation={latest} role={role} online={online} onChanged={onChanged} />
             ) : null}
 
             {showSend ? (

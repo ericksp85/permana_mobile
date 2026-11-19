@@ -21,9 +21,9 @@ export const API_BASE_URL =
 // The Android emulator can't resolve Herd's `.test` domains, but it reaches the
 // Mac's loopback at 10.0.2.2. When pointed there, send the Herd site name as the
 // Host header so nginx routes to the right site.
-const useAndroidEmulatorHost = __DEV__ && Platform.OS === 'android' && API_BASE_URL.includes('10.0.2.2');
+const useAndroidEmulatorHost = Platform.OS === 'android' && API_BASE_URL.includes('10.0.2.2');
 
-/** Extra headers needed to reach the backend in dev (empty in release builds). */
+/** Extra headers needed to reach the backend in dev (empty unless the build targets the emulator loopback). */
 export const API_EXTRA_HEADERS: Record<string, string> = useAndroidEmulatorHost
     ? { Host: 'sales.test' }
     : {};

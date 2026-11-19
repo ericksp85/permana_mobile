@@ -74,11 +74,34 @@ type Options = {
     headers?: Record<string, string>;
 };
 
+let getRetryDelaysMs = [400, 1200];
+
+/** Override the backoff between GET retries (tests use [] or [0, 0]). */
+export function setGetRetryDelays(delaysMs: number[]): void {
+    getRetryDelaysMs = delaysMs;
+}
+
 /**
  * Call the Permana API and return the parsed JSON body, throwing an ApiError
- * on any non-2xx response.
+ * on any non-2xx response. Reads (GET) are retried on a network failure or a
+ * 5xx — they are safe to repeat and a brief server hiccup (e.g. a locked
+ * SQLite row) shouldn't blank a whole screen. Writes are never retried here;
+ * they go through the offline outbox with an idempotency key instead.
  */
 export async function apiFetch<T>(path: string, options: Options = {}): Promise<T> {
+    const isRead = (options.method ?? 'GET') === 'GET';
+    for (let attempt = 0; ; attempt++) {
+        try {
+            return await request<T>(path, options);
+        } catch (e) {
+            const retryable = e instanceof NetworkError || (e instanceof ApiError && e.status >= 500);
+            if (!isRead || !retryable || attempt >= getRetryDelaysMs.length) throw e;
+            await new Promise((resolve) => setTimeout(resolve, getRetryDelaysMs[attempt]));
+        }
+    }
+}
+
+async function request<T>(path: string, options: Options): Promise<T> {
     // Build the query string by hand — React Native's URL/searchParams support
     // is incomplete, so we don't rely on it.
     let url = API_BASE_URL + path;

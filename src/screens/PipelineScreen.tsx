@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiFetch } from '../api/client';
+import { useAuth } from '../auth/AuthContext';
 import { Card, StagePill, rupiahShort } from '../components/ui';
 import type { PipelineStackScreenProps } from '../navigation/types';
 import { colors, radius, spacing } from '../theme';
@@ -19,6 +20,8 @@ import type { Lead, Paginated } from '../types/api';
 export default function PipelineScreen({
     navigation,
 }: PipelineStackScreenProps<'PipelineList'>) {
+    const { user } = useAuth();
+    const [onlyUnverified, setOnlyUnverified] = useState(false);
     const [leads, setLeads] = useState<Lead[]>([]);
     const [query, setQuery] = useState('');
     const [loading, setLoading] = useState(true);
@@ -52,13 +55,14 @@ export default function PipelineScreen({
 
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
-        if (!q) return leads;
-        return leads.filter((l) =>
+        const pool = onlyUnverified ? leads.filter((l) => l.verification_status === 'unverified') : leads;
+        if (!q) return pool;
+        return pool.filter((l) =>
             [l.company, l.contact_name, l.bandwidth]
                 .filter(Boolean)
                 .some((v) => v!.toLowerCase().includes(q)),
         );
-    }, [leads, query]);
+    }, [leads, query, onlyUnverified]);
 
     if (loading) {
         return (
@@ -94,6 +98,28 @@ export default function PipelineScreen({
                     returnKeyType="search"
                 />
             </View>
+            {user?.role === 'admin_sales' ? (
+                <View style={styles.filterRow}>
+                    <Pressable
+                        onPress={() => setOnlyUnverified(false)}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: !onlyUnverified }}
+                        style={[styles.filterChip, !onlyUnverified && styles.filterChipOn]}
+                    >
+                        <Text style={[styles.filterText, !onlyUnverified && styles.filterTextOn]}>All</Text>
+                    </Pressable>
+                    <Pressable
+                        onPress={() => setOnlyUnverified(true)}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: onlyUnverified }}
+                        style={[styles.filterChip, onlyUnverified && styles.filterChipOn]}
+                    >
+                        <Text style={[styles.filterText, onlyUnverified && styles.filterTextOn]}>
+                            To verify ({leads.filter((l) => l.verification_status === 'unverified').length})
+                        </Text>
+                    </Pressable>
+                </View>
+            ) : null}
             <FlatList showsVerticalScrollIndicator={false}
                 data={filtered}
                 keyExtractor={(item) => String(item.id)}
@@ -152,6 +178,18 @@ export default function PipelineScreen({
 }
 
 const styles = StyleSheet.create({
+    filterRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
+    filterChip: {
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        borderColor: colors.line,
+        backgroundColor: '#fff',
+    },
+    filterChipOn: { backgroundColor: colors.navy, borderColor: colors.navy },
+    filterText: { fontSize: 13, fontWeight: '600', color: colors.ink },
+    filterTextOn: { color: '#fff' },
     titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     addBtn: {
         backgroundColor: colors.navy,

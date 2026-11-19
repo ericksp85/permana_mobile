@@ -1,4 +1,12 @@
-import { ApiError, NetworkError, apiFetch, isTransientError, setAuthToken, setUnauthorizedHandler } from '../api/client';
+import {
+    ApiError,
+    NetworkError,
+    apiFetch,
+    isTransientError,
+    setAuthToken,
+    setGetRetryDelays,
+    setUnauthorizedHandler,
+} from '../api/client';
 
 function respond(status: number, body: string) {
     return Promise.resolve({ ok: status >= 200 && status < 300, status, text: () => Promise.resolve(body) });
@@ -10,6 +18,7 @@ beforeEach(() => {
     (globalThis as any).fetch = fetchMock;
     setAuthToken(null);
     setUnauthorizedHandler(null);
+    setGetRetryDelays([0, 0]);
 });
 
 describe('apiFetch', () => {
@@ -71,10 +80,37 @@ describe('apiFetch', () => {
                 }),
         );
         const pending = apiFetch('/slow').catch((e) => e);
-        await jest.advanceTimersByTimeAsync(20_001);
+        await jest.advanceTimersByTimeAsync(60_010); // 3 attempts x 20s timeout
         const err: any = await pending;
         jest.useRealTimers();
         expect(err).toBeInstanceOf(NetworkError);
         expect(err.message).toMatch(/timed out/);
+    });
+
+    it('retries a GET after a 500 and returns the later success', async () => {
+        fetchMock
+            .mockReturnValueOnce(respond(500, '{"message":"database is locked"}'))
+            .mockReturnValueOnce(respond(200, '{"ok":true}'));
+        await expect(apiFetch('/x')).resolves.toEqual({ ok: true });
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('gives up after the retries on a persistent 500', async () => {
+        fetchMock.mockReturnValue(respond(500, '{"message":"boom"}'));
+        const err: any = await apiFetch('/x').catch((e) => e);
+        expect(err).toBeInstanceOf(ApiError);
+        expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+
+    it('never retries a POST, even on a 500', async () => {
+        fetchMock.mockReturnValue(respond(500, '{"message":"boom"}'));
+        await apiFetch('/x', { method: 'POST', body: {} }).catch(() => {});
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not retry a GET on a 4xx', async () => {
+        fetchMock.mockReturnValue(respond(404, '{"message":"nope"}'));
+        await apiFetch('/x').catch(() => {});
+        expect(fetchMock).toHaveBeenCalledTimes(1);
     });
 });

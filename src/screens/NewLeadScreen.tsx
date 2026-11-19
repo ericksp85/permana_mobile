@@ -63,7 +63,11 @@ export default function NewLeadScreen({ navigation }: PipelineStackScreenProps<'
         const mrcDigits = mrc.replace(/\D/g, '');
         if (mrc.trim() && !mrcDigits) next.est_mrc = 'Enter a number, e.g. 2000000.';
         setErrors(next);
-        if (Object.keys(next).length) return;
+        if (Object.keys(next).length) {
+            // The field errors sit above the fold on a long form; say it next to the button too.
+            setFormError('Please fix the highlighted fields.');
+            return;
+        }
 
         setSubmitting(true);
         try {
@@ -94,7 +98,9 @@ export default function NewLeadScreen({ navigation }: PipelineStackScreenProps<'
                 }
                 setErrors(fieldErrors);
                 setFormError(
-                    Object.keys(fieldErrors).length ? undefined : e.message || 'Couldn’t create the lead.',
+                    Object.keys(fieldErrors).length
+                        ? 'Please fix the highlighted fields.'
+                        : e.message || 'Couldn’t create the lead.',
                 );
             } else {
                 setFormError('Couldn’t create the lead.');
@@ -113,6 +119,7 @@ export default function NewLeadScreen({ navigation }: PipelineStackScreenProps<'
                 style={styles.flex}
                 contentContainerStyle={styles.content}
                 keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
                 showsVerticalScrollIndicator={false}
             >
                 <Field label="Company *" value={company} onChangeText={setCompany} placeholder="PT / CV / personal name" error={errors.company} />
